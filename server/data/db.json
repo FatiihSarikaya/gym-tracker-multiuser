@@ -1,0 +1,36 @@
+{
+  "members": [
+    {
+      "id": 1,
+      "firstName": "fatih",
+      "lastName": "Sarıkaya",
+      "email": "canfatih445@gmail.com",
+      "phoneNumber": "05524100470",
+      "dateOfBirth": "2025-07-28T00:00:00.000Z",
+      "membershipStartDate": "2025-08-13T06:36:27.142Z",
+      "membershipEndDate": null,
+      "membershipType": "Premium",
+      "isActive": true,
+      "createdAt": "2025-08-13T06:36:27.142Z",
+      "updatedAt": "2025-08-13T06:36:27.142Z"
+    },
+    {
+      "id": 2,
+      "firstName": "alperen",
+      "lastName": "çakın",
+      "email": "fatihsrky8758@gmail.com",
+      "phoneNumber": "34234234234234",
+      "dateOfBirth": "2025-07-30T00:00:00.000Z",
+      "membershipStartDate": "2025-08-13T06:41:51.625Z",
+      "membershipEndDate": null,
+      "membershipType": "VIP",
+      "isActive": false,
+      "createdAt": "2025-08-13T06:41:51.625Z",
+      "updatedAt": "2025-08-13T06:41:51.625Z"
+    }
+  ],
+  "attendances": [],
+  "payments": [],
+  "lessons": [],
+  "lessonAttendances": []
+}
