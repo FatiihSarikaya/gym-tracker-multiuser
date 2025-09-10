@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
-    "build": "echo \"Nothing to build for backendd\"",
-
+    "build": "echo \"Nothing to build for backend\"",
     "migrate": "node src/scripts/migrate.js"
   },
   "dependencies": {

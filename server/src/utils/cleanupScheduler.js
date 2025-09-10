@@ -1,11 +1,14 @@
 import cron from 'node-cron'
 
+const runtimePort = process.env.PORT || 5000
+const baseUrl = process.env.BASE_URL || `http://localhost:${runtimePort}`
+
 // Cleanup expired member lessons every day at 2 AM
 cron.schedule('0 2 * * *', async () => {
   try {
     console.log('Running scheduled cleanup of expired member lessons...')
     
-    const response = await fetch('http://localhost:5000/api/MemberLessons/cleanup-expired', {
+    const response = await fetch(`${baseUrl}/api/MemberLessons/cleanup-expired`, {
       method: 'POST'
     })
     
@@ -25,7 +28,7 @@ cron.schedule('30 2 * * *', async () => {
   try {
     console.log('Running scheduled cleanup of expired lessons...')
     
-    const response = await fetch('http://localhost:5000/api/Lessons/cleanup-expired', {
+    const response = await fetch(`${baseUrl}/api/Lessons/cleanup-expired`, {
       method: 'POST'
     })
     
@@ -45,7 +48,7 @@ cron.schedule('0 3 * * *', async () => {
   try {
     console.log('Running scheduled cleanup of orphaned records...')
     
-    const response = await fetch('http://localhost:5000/api/Members/cleanup-orphaned', {
+    const response = await fetch(`${baseUrl}/api/Members/cleanup-orphaned`, {
       method: 'POST'
     })
     
