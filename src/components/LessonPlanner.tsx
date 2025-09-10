@@ -47,6 +47,7 @@ export default function LessonPlanner() {
               const pkgName = pkgs && pkgs.length > 0 ? `${pkgs[0].packageName} (${pkgs[0].lessonCount})` : '-'
               let nextLesson = '-'
               let time = ''
+              let upcomingCount = 0
               if (assigns && assigns.length > 0) {
                 const today = selectedWeek
                 const takenSet = new Set((attends || []).map((a: any) => `${a.lessonId}-${a.lessonDate}`))
@@ -62,6 +63,7 @@ export default function LessonPlanner() {
                     if (a.startDate === b.startDate) return (a.startTime || '').localeCompare(b.startTime || '')
                     return a.startDate.localeCompare(b.startDate)
                   })
+                upcomingCount = upcoming.length
                 if (upcoming.length > 0) {
                   nextLesson = upcoming[0].startDate
                   time = upcoming[0].startTime
@@ -80,6 +82,7 @@ export default function LessonPlanner() {
                 remainingLessons,
                 nextLesson,
                 time,
+                upcomingCount,
               }
             } catch {
               return null
@@ -116,8 +119,11 @@ export default function LessonPlanner() {
 
   const stats = {
     total: items.length,
-    completed: 0,
-    scheduled: 0,
+    // Tamamlanan: üyelerin tamamlanan ders toplamı
+    completed: items.reduce((sum: number, l: any) => sum + (l.completedLessons || 0), 0),
+    // Planlanan: gelecekteki toplam ders sayısı = kalan ders toplamı
+    scheduled: items.reduce((sum: number, l: any) => sum + (l.remainingLessons || 0), 0),
+    // Bekleyen kaldırıldı
     pending: 0,
     totalLessons: items.reduce((sum, l) => sum + l.totalLessons, 0),
     completedLessons: items.reduce((sum, l) => sum + l.completedLessons, 0)
@@ -174,7 +180,7 @@ export default function LessonPlanner() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -214,19 +220,7 @@ export default function LessonPlanner() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Bekleyen</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              </div>
-              <div className="p-3 rounded-full bg-yellow-100">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
 
       {/* Progress Overview */}

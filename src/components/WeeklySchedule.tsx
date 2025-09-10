@@ -153,7 +153,11 @@
               <div key={dateISO} className="text-center">
                 <div className="p-4 border rounded-lg hover:bg-gray-50">
                   <h3 className="font-medium text-gray-900">{dayName(dateISO)}</h3>
-                  <p className="text-2xl font-bold text-blue-600">{(sessionsByDay[dateISO] || []).length}</p>
+                  {(() => {
+                    const sessions = (sessionsByDay[dateISO] || [])
+                    const hourCount = new Set(sessions.map(s => (s.time || '').slice(0,5))).size
+                    return <p className="text-2xl font-bold text-blue-600">{hourCount}</p>
+                  })()}
                   <p className="text-xs text-gray-500">ders</p>
                 </div>
               </div>
@@ -169,41 +173,59 @@
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>{dayName(dateISO)} - {dateISO}</span>
-                <Badge variant="info">{(sessionsByDay[dateISO] || []).length} ders</Badge>
+                {(() => {
+                  const sessions = (sessionsByDay[dateISO] || [])
+                  const hourCount = new Set(sessions.map(s => (s.time || '').slice(0,5))).size
+                  return <Badge variant="info">{hourCount} ders</Badge>
+                })()}
               </CardTitle>
               <CardDescription>Günlük program detayları</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {(sessionsByDay[dateISO] || []).map((session, sessionIndex) => (
-                  <div
-                    key={sessionIndex}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-full bg-blue-100">
-                        <Clock className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{session.member}</p>
-                        <p className="text-sm text-gray-500">{session.type}</p>
-                      </div>
+              {(() => {
+                const sessions = (sessionsByDay[dateISO] || [])
+                if (sessions.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <p>Bu gün için program yok</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">{session.time}</p>
-                      <Badge variant="outline" className="text-xs">
-                        {session.type}
-                      </Badge>
-                    </div>
+                  )
+                }
+                const byHour: Record<string, { time: string; member: string; type: string }[]> = {}
+                sessions.forEach(s => {
+                  const hour = (s.time || '').slice(0,5)
+                  if (!byHour[hour]) byHour[hour] = []
+                  byHour[hour].push(s)
+                })
+                const hours = Object.keys(byHour).sort()
+                return (
+                  <div className="space-y-3">
+                    {hours.map((h) => (
+                      <details key={h} className="border rounded-lg">
+                        <summary className="flex items-center justify-between p-3 cursor-pointer select-none">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-blue-100"><Clock className="w-4 h-4 text-blue-600" /></div>
+                            <span className="font-medium text-gray-900">{h}</span>
+                          </div>
+                          <Badge variant="outline" className="text-xs">{byHour[h].length} üye</Badge>
+                        </summary>
+                        <div className="divide-y">
+                          {byHour[h].map((s, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3">
+                              <div>
+                                <p className="font-medium text-gray-900">{s.member}</p>
+                                <p className="text-sm text-gray-500">{s.type}</p>
+                              </div>
+                              <Badge variant="outline" className="text-xs">{s.type}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    ))}
                   </div>
-                ))}
-                {(sessionsByDay[dateISO] || []).length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                    <p>Bu gün için program yok</p>
-                  </div>
-                )}
-              </div>
+                )
+              })()}
             </CardContent>
           </Card>
         ))}

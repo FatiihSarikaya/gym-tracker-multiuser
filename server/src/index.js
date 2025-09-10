@@ -13,6 +13,7 @@ import packagesRouter from './routes/packages.js'
 import memberPackagesRouter from './routes/memberPackages.js'
 import memberLessonsRouter from './routes/memberLessons.js'
 import uploadsRouter from './routes/uploads.js'
+import './utils/cleanupScheduler.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000

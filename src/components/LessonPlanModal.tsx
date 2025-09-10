@@ -18,6 +18,10 @@ interface Member {
   id: number
   name: string
   lessons: Lesson[]
+  totalLessons?: number
+  attendedCount?: number
+  remainingLessons?: number
+  membershipType?: string
 }
 
 interface LessonPlanModalProps { onClose: () => void }
@@ -55,7 +59,14 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
           apiService.getMembers() as any,
           apiService.getLessons() as any
         ])
-        setMembers(ms.map((m: any) => ({ id: m.id, name: `${m.firstName} ${m.lastName}`, lessons: [] })))
+        setMembers(ms.map((m: any) => ({ 
+          id: m.id, 
+          name: `${m.firstName} ${m.lastName}`, 
+          lessons: [],
+          totalLessons: m.totalLessons || 0,
+          attendedCount: m.attendedCount || 0,
+          remainingLessons: m.remainingLessons || 0
+        })))
         // Ders Seç bölümünde sadece her ders türünden 1 örnek göster
         const uniqueByName = Object.values(
           (ls || []).reduce((acc: Record<string, any>, cur: any) => {
@@ -86,11 +97,63 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
   }, [selectedLessonId])
 
   const toggleMember = (id: number) => {
+    const member = members.find(m => m.id === id)
+    const isPackageFinished = (member?.totalLessons || 0) === (member?.attendedCount || 0) && (member?.totalLessons || 0) > 0
+    
+    if (isPackageFinished) {
+      return // Don't allow selection if package is finished
+    }
+    
     setSelectedMemberIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
   const handleAssignMembers = async () => {
     if (!selectedLessonId || selectedMemberIds.length === 0 || !assignDate) return
+    
+    // Check for members with finished packages and try to activate waiting packages
+    const membersToProcess = []
+    for (const memberId of selectedMemberIds) {
+      const member = members.find(m => m.id === memberId)
+      const isPackageFinished = (member?.totalLessons || 0) === (member?.attendedCount || 0) && (member?.totalLessons || 0) > 0
+      
+      if (isPackageFinished) {
+        // Try to activate waiting package by calling the API
+        try {
+          const response = await fetch(`/api/MemberPackages/activate-waiting/${memberId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          })
+          
+          if (response.ok) {
+            // Package was activated, refresh member data
+            const updatedMembers = await apiService.getMembers()
+            setMembers(updatedMembers.map((m: any) => ({ 
+              id: m.id, 
+              name: `${m.firstName} ${m.lastName}`, 
+              lessons: [],
+              totalLessons: m.totalLessons || 0,
+              attendedCount: m.attendedCount || 0,
+              remainingLessons: m.remainingLessons || 0,
+              membershipType: m.membershipType || ''
+            })))
+            membersToProcess.push(memberId)
+          } else {
+            console.log(`No waiting package found for member ${memberId}`)
+          }
+        } catch (error) {
+          console.error('Error activating waiting package:', error)
+        }
+      } else {
+        membersToProcess.push(memberId)
+      }
+    }
+    
+    if (membersToProcess.length === 0) {
+      push({ variant: 'error', message: 'Seçilen üyelerin ders hakkı bitmiş ve bekleyen paket yok' })
+      setSelectedMemberIds([])
+      return
+    }
+    
     let usedLessonId = selectedLessonId
     // Eğer kullanıcı eğitmen/saat girmişse yeni tarihli ders oluştur
     try {
@@ -111,7 +174,7 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
         usedLessonId = created.id
       }
       const daysOfWeek = String((lessons.find(l => l.id === usedLessonId) || lessons.find(l => l.id === selectedLessonId))?.dayOfWeek || '').split(/\s+/).filter(Boolean)
-      for (const memberId of selectedMemberIds) {
+      for (const memberId of membersToProcess) {
         try {
           await apiService.assignMemberToLesson({ memberId, lessonId: usedLessonId, daysOfWeek, startDate: assignDate })
         } catch (e) {
@@ -257,12 +320,23 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
             Derse Üye Ekle
           </h3>
           <div className="space-y-2 max-h-48 overflow-auto">
-            {members.map(m => (
-              <label key={m.id} className="flex items-center gap-2">
-                <input type="checkbox" checked={selectedMemberIds.includes(m.id)} onChange={() => toggleMember(m.id)} />
-                <span>{m.name}</span>
-              </label>
-            ))}
+            {members.map(m => {
+              const isPackageFinished = (m.totalLessons || 0) === (m.attendedCount || 0) && (m.totalLessons || 0) > 0
+              return (
+                <label key={m.id} className={`flex items-center gap-2 ${isPackageFinished ? 'opacity-50' : ''}`}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedMemberIds.includes(m.id)} 
+                    onChange={() => toggleMember(m.id)}
+                    disabled={isPackageFinished}
+                  />
+                  <span className={isPackageFinished ? 'text-red-600' : ''}>
+                    {m.name} {m.membershipType && `(${m.membershipType})`}
+                    {isPackageFinished && ' ⚠️ Ders hakkı bitti'}
+                  </span>
+                </label>
+              )
+            })}
           </div>
           <div className="mt-3 flex justify-end">
             <Button onClick={handleAssignMembers} disabled={!selectedLesson || !assignDate || selectedMemberIds.length===0}>Üyeleri Ata</Button>

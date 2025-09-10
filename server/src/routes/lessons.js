@@ -69,9 +69,46 @@ router.put('/:id', async (req, res) => {
 // DELETE /api/Lessons/:id
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id)
+  
+  // Validate id parameter
+  if (isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid id parameter' })
+  }
+  
   const result = await Lesson.deleteOne({ id })
   if (result.deletedCount === 0) return res.status(404).json({ message: 'Lesson not found' })
   res.status(204).end()
+})
+
+// POST /api/Lessons/cleanup-expired
+// Remove lessons that are older than 1 week
+router.post('/cleanup-expired', async (req, res) => {
+  try {
+    console.log('Starting cleanup of expired lessons...')
+    
+    // Calculate date 1 week ago
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const oneWeekAgoString = oneWeekAgo.toISOString().split('T')[0] // YYYY-MM-DD format
+    
+    console.log(`Removing lessons older than: ${oneWeekAgoString}`)
+    
+    // Find and delete expired lessons
+    const result = await Lesson.deleteMany({
+      lessonDate: { $lt: oneWeekAgoString }
+    })
+    
+    console.log(`Cleaned up ${result.deletedCount} expired lessons`)
+    
+    res.json({ 
+      cleaned: result.deletedCount, 
+      cutoffDate: oneWeekAgoString,
+      message: `Cleaned up ${result.deletedCount} expired lessons older than ${oneWeekAgoString}` 
+    })
+  } catch (error) {
+    console.error('Error cleaning up expired lessons:', error)
+    res.status(500).json({ error: 'Failed to clean up expired lessons' })
+  }
 })
 
 export default router

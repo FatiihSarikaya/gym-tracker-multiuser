@@ -20,6 +20,46 @@ router.post('/assign', async (req, res) => {
   const lesson = await Lesson.findOne({ id: Number(lessonId) }).lean()
   if (!lesson) return res.status(404).json({ message: 'Lesson not found' })
   
+  // Check if member exists and has remaining lessons
+  const Member = (await import('../models/Member.js')).default
+  const member = await Member.findOne({ id: Number(memberId) }).lean()
+  if (!member) return res.status(404).json({ message: 'Member not found' })
+  
+  // Check if member's package is finished
+  const totalLessons = member.totalLessons || 0
+  const attendedCount = member.attendedCount || 0
+  const isPackageFinished = totalLessons === attendedCount && totalLessons > 0
+  
+  if (isPackageFinished) {
+    // Check if there's a waiting package to activate (regardless of remainingLessons)
+    const MemberPackage = (await import('../models/MemberPackage.js')).default
+    const waitingPackage = await MemberPackage.findOne({ 
+      memberId: Number(memberId), 
+      isActive: false
+    }).sort({ id: 1 }).lean()
+    
+    if (waitingPackage) {
+      // Activate the waiting package and reset remainingLessons to full
+      await MemberPackage.updateOne(
+        { id: waitingPackage.id },
+        { isActive: true, remainingLessons: waitingPackage.lessonCount }
+      )
+      
+      // Update member totals and membership type
+      const updatedMember = await Member.findOne({ id: Number(memberId) })
+      if (updatedMember) {
+        updatedMember.totalLessons = (updatedMember.totalLessons || 0) + waitingPackage.lessonCount
+        updatedMember.remainingLessons = (updatedMember.remainingLessons || 0) + waitingPackage.lessonCount
+        updatedMember.membershipType = waitingPackage.packageName // Update membership type to new package
+        await updatedMember.save()
+        
+        console.log(`Activated waiting package ${waitingPackage.packageName} for member ${memberId}`)
+      }
+    } else {
+      return res.status(400).json({ message: 'Member has no remaining lesson credits and no waiting packages' })
+    }
+  }
+  
   // Check if member is already assigned to this lesson
   const existingAssignment = await MemberLesson.findOne({ 
     memberId: Number(memberId), 
@@ -65,12 +105,49 @@ router.get('/member/:memberId', async (req, res) => {
 // DELETE /api/MemberLessons/:id
 router.delete('/:id', async (req, res) => {
   const id = Number(req.params.id)
+  
+  // Validate id parameter
+  if (isNaN(id)) {
+    return res.status(400).json({ message: 'Invalid id parameter' })
+  }
+  
   const result = await MemberLesson.deleteOne({ id })
   if (result.deletedCount === 0) return res.status(404).json({ message: 'MemberLesson not found' })
   res.status(204).end()
 })
 
 function lessonDayOfWeek() { return '' }
+
+// POST /api/MemberLessons/cleanup-expired
+// Remove member lessons that are older than 1 week
+router.post('/cleanup-expired', async (req, res) => {
+  try {
+    console.log('Starting cleanup of expired member lessons...')
+    
+    // Calculate date 1 week ago
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const oneWeekAgoString = oneWeekAgo.toISOString().split('T')[0] // YYYY-MM-DD format
+    
+    console.log(`Removing member lessons older than: ${oneWeekAgoString}`)
+    
+    // Find and delete expired member lessons
+    const result = await MemberLesson.deleteMany({
+      lessonDate: { $lt: oneWeekAgoString }
+    })
+    
+    console.log(`Cleaned up ${result.deletedCount} expired member lessons`)
+    
+    res.json({ 
+      cleaned: result.deletedCount, 
+      cutoffDate: oneWeekAgoString,
+      message: `Cleaned up ${result.deletedCount} expired member lessons older than ${oneWeekAgoString}` 
+    })
+  } catch (error) {
+    console.error('Error cleaning up expired member lessons:', error)
+    res.status(500).json({ error: 'Failed to clean up expired member lessons' })
+  }
+})
 
 export default router
 

@@ -43,6 +43,8 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
         membershipType: formData.membershipType,
         // @ts-ignore - DTO'ya genişletme: backend totalLessons destekliyor
         totalLessons: Number(formData.totalLessons) || 0,
+        // @ts-ignore - DTO'ya genişletme: backend packageName destekliyor
+        packageName: formData.membershipType,
         isActive: true
       }
       

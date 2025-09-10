@@ -413,17 +413,6 @@ class ApiService {
     });
   }
 
-  // Packages API
-  async getPackages(): Promise<PackageDef[]> {
-    return this.request<PackageDef[]>(`/Packages`)
-  }
-  async purchasePackage(payload: MemberPackagePurchase) {
-    return this.request(`/MemberPackages/purchase`, { method: 'POST', body: JSON.stringify(payload) })
-  }
-  async getMemberPackages(memberId: number) {
-    return this.request(`/MemberPackages/member/${memberId}`)
-  }
-
   // Member Lessons API
   async assignMemberToLesson(payload: MemberLessonAssign) {
     return this.request(`/MemberLessons/assign`, { method: 'POST', body: JSON.stringify(payload) })
@@ -433,6 +422,29 @@ class ApiService {
   }
   async getMemberLessonsByMember(memberId: number) {
     return this.request(`/MemberLessons/member/${memberId}`)
+  }
+
+  // Member Packages API
+  async getMemberPackages(memberId: number) {
+    return this.request(`/MemberPackages/member/${memberId}`)
+  }
+
+  async purchasePackage(memberId: number, packageName: string) {
+    return this.request('/MemberPackages/purchase', {
+      method: 'POST',
+      body: JSON.stringify({ memberId, packageName })
+    })
+  }
+
+  async deleteMemberPackage(packageId: number) {
+    return this.request(`/MemberPackages/${packageId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  // Packages API
+  async getPackages(): Promise<PackageDef[]> {
+    return this.request<PackageDef[]>(`/Packages`)
   }
 
 }

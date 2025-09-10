@@ -8,6 +8,7 @@ import { Users, UserCheck, UserX, Clock, Plus, Search, Filter, Phone, Mail, Load
 import { apiService, Member, CreateMemberDto, UpdateMemberDto } from '@/services/api'
 import { useToast } from '@/components/ui/toast'
 import NewMemberForm from './NewMemberForm'
+import PackageManagementModal from './PackageManagementModal'
 import Modal from './ui/modal'
 
 export default function MemberList() {
@@ -24,6 +25,7 @@ export default function MemberList() {
   const [filterEnd, setFilterEnd] = useState<string>('')
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoStoredPath, setPhotoStoredPath] = useState<string | null>(null)
+  const [showPackageModal, setShowPackageModal] = useState(false)
   const API_BASE = (typeof process !== 'undefined' && (process as any).env && (process as any).env.NEXT_PUBLIC_API_BASE_URL) ? (process as any).env.NEXT_PUBLIC_API_BASE_URL as string : 'http://localhost:5000/api'
   const UPLOAD_ORIGIN = API_BASE.replace(/\/api\/?$/, '')
 
@@ -45,6 +47,12 @@ export default function MemberList() {
     }
   }
 
+  const refreshSelectedMember = async () => {
+    if (selectedMember) {
+      await openDetails(selectedMember.id)
+    }
+  }
+
   const handleCreateMember = async (data: CreateMemberDto) => {
     try {
       await apiService.createMember(data)
@@ -61,15 +69,14 @@ export default function MemberList() {
   const openDetails = async (id: number) => {
     try {
       const m = await apiService.getMember(id)
-      // fetch attendance stats
+      // Stats should come from server counters (do not derive from historic attendances)
       const allAttendances = await apiService.getLessonAttendancesByMember(id)
-      const derivedAttended = allAttendances.filter(a => a.attended).length
-      const derivedExtra = allAttendances.filter(a => (a as any).type === 'ekstra').length
       const totalLessons = (m as any).totalLessons ?? 0
-      const attendedCount = (m as any).attendedCount ?? derivedAttended
-      const extraCount = (m as any).extraCount ?? derivedExtra
+      const attendedCount = (m as any).attendedCount ?? 0
+      const extraCount = (m as any).extraCount ?? 0
       const remainingLessons = (m as any).remainingLessons ?? Math.max(totalLessons - attendedCount, 0)
-      ;(m as any)._stats = { attendedCount, extraCount, totalLessons, remainingLessons }
+      const absentCount = Math.max(totalLessons - attendedCount - remainingLessons, 0)
+      ;(m as any)._stats = { attendedCount, extraCount, totalLessons, remainingLessons, absentCount }
       // history data (enrich lesson attendances for UI expectations)
       try {
         const pkgs = await apiService.getMemberPackages(id) as any[]
@@ -82,9 +89,16 @@ export default function MemberList() {
                 checkInTime: a.lessonDate, // UI filters use 'checkInTime'
                 lessonName: lesson?.name,
                 status: a.attended ? (a.type === 'ekstra' ? 'Ekstra' : 'Geldi') : 'Gelmedi',
+                packageName: a.packageName || '',
+                packageId: a.packageId || null
               }
             } catch {
-              return { ...a, checkInTime: a.lessonDate }
+              return { 
+                ...a, 
+                checkInTime: a.lessonDate,
+                packageName: a.packageName || '',
+                packageId: a.packageId || null
+              }
             }
           })
         )
@@ -327,6 +341,12 @@ export default function MemberList() {
                         Başlangıç: {new Date(member.membershipStartDate).toLocaleDateString('tr-TR')} | 
                         Üyelik: {member.membershipType}
                       </p>
+                      {/* Check if member's package is finished */}
+                      {((member as any).totalLessons || 0) === ((member as any).attendedCount || 0) && (member as any).totalLessons > 0 && (
+                        <p className="text-xs text-red-600 font-medium mt-1">
+                          ⚠️ Ders hakkı bitti
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -389,7 +409,7 @@ export default function MemberList() {
                       {getStatusBadge(selectedMember.isActive)}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
                     <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
                       <p className="text-xs text-blue-700">Toplam Ders</p>
                       <p className="text-xl font-semibold text-blue-900">{(selectedMember as any)._stats?.totalLessons ?? 0}</p>
@@ -401,6 +421,10 @@ export default function MemberList() {
                     <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
                       <p className="text-xs text-amber-700">Kalan</p>
                       <p className="text-xl font-semibold text-amber-900">{(selectedMember as any)._stats?.remainingLessons ?? 0}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-red-50 border border-red-100">
+                      <p className="text-xs text-red-700">Gelmedi</p>
+                      <p className="text-xl font-semibold text-red-900">{(selectedMember as any)._stats?.absentCount ?? 0}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
                       <p className="text-xs text-purple-700">Ekstra</p>
@@ -425,7 +449,17 @@ export default function MemberList() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="border rounded p-3">
-                      <p className="font-medium mb-2">Paketler</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="font-medium">Paketler</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowPackageModal(true)}
+                          className="text-xs"
+                        >
+                          Düzenle
+                        </Button>
+                      </div>
                       <ul className="text-sm space-y-1 max-h-48 overflow-auto">
                         {applyDateFilter(((selectedMember as any)._history?.packages || []), 'purchasedAt', filterStart, filterEnd).length === 0 && (
                           <li className="text-gray-500">Kayıt yok</li>
@@ -446,9 +480,16 @@ export default function MemberList() {
                         )}
                         {applyDateFilter(((selectedMember as any)._history?.attendances || []), 'checkInTime', filterStart, filterEnd).map((a: any) => (
                           <li key={a.id} className="flex justify-between">
-                            <span>
-                              {new Date(a.checkInTime).toLocaleDateString('tr-TR')} • {a.lessonName || '-'}
-                            </span>
+                            <div className="flex-1">
+                              <div>
+                                {new Date(a.checkInTime).toLocaleDateString('tr-TR')} • {a.lessonName || '-'}
+                              </div>
+                              {a.packageName && (
+                                <div className="text-xs text-blue-600">
+                                  📦 {a.packageName}
+                                </div>
+                              )}
+                            </div>
                             <span>
                               {a.status || (a.attended ? (a.type === 'ekstra' ? 'Ekstra' : 'Geldi') : 'Gelmedi')}
                             </span>
@@ -515,6 +556,19 @@ export default function MemberList() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Package Management Modal */}
+      {selectedMember && (
+        <PackageManagementModal
+          isOpen={showPackageModal}
+          onClose={() => setShowPackageModal(false)}
+          memberId={selectedMember.id}
+          memberName={`${selectedMember.firstName} ${selectedMember.lastName}`}
+          onPackageUpdate={() => {
+            refreshSelectedMember()
+          }}
+        />
       )}
     </div>
   )

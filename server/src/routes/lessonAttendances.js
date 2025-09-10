@@ -5,6 +5,71 @@ import { getNextId } from '../lib/sequence.js'
 
 const router = Router()
 
+// Helper function to determine which package to use for attendance
+const getActivePackageForMember = async (memberId) => {
+  try {
+    const MemberPackage = (await import('../models/MemberPackage.js')).default
+    const packages = await MemberPackage.find({ memberId }).sort({ id: 1 }).lean() // Eski paketlerden başla
+    
+    // Find the first package with remaining lessons (FIFO - First In, First Out)
+    for (const pkg of packages) {
+      if (pkg.remainingLessons > 0) {
+        return pkg
+      }
+    }
+    
+    // If no package has remaining lessons, return null (no active package)
+    return null
+  } catch (error) {
+    console.error('Error getting active package:', error)
+    return null
+  }
+}
+
+// Helper function to check if member's package is finished
+const isPackageFinished = (member) => {
+  const totalLessons = member.totalLessons || 0
+  const attendedCount = member.attendedCount || 0
+  return totalLessons === attendedCount && totalLessons > 0
+}
+
+// Helper function to activate next package when current one is finished
+const activateNextPackage = async (memberId) => {
+  try {
+    const MemberPackage = (await import('../models/MemberPackage.js')).default
+    const packages = await MemberPackage.find({ memberId }).sort({ id: 1 }).lean()
+    
+    // Find the first inactive package (waiting package)
+    for (const pkg of packages) {
+      if (!pkg.isActive) {
+        // Activate this package and reset remainingLessons to full
+        await MemberPackage.updateOne(
+          { id: pkg.id },
+          { isActive: true, remainingLessons: pkg.lessonCount }
+        )
+        
+        // Update member totals and membership type
+        const Member = (await import('../models/Member.js')).default
+        const member = await Member.findOne({ id: memberId })
+        if (member) {
+          member.totalLessons = (member.totalLessons || 0) + pkg.lessonCount
+          member.remainingLessons = (member.remainingLessons || 0) + pkg.lessonCount
+          member.membershipType = pkg.packageName // Update membership type to new package
+          await member.save()
+        }
+        
+        console.log(`Activated next package ${pkg.packageName} for member ${memberId}`)
+        return pkg
+      }
+    }
+    
+    return null
+  } catch (error) {
+    console.error('Error activating next package:', error)
+    return null
+  }
+}
+
 // GET /api/LessonAttendances
 router.get('/', async (req, res) => {
   const items = await LessonAttendance.find({}).lean()
@@ -53,6 +118,9 @@ router.post('/', async (req, res) => {
   if (existing) {
     return res.status(409).json({ message: 'Attendance already exists for this member, lesson and date', id: existing.id })
   }
+  // Get active package for this member
+  const activePackage = await getActivePackageForMember(payload.memberId)
+  
   const item = {
     id: await getNextId(LessonAttendance),
     memberId: payload.memberId,
@@ -60,6 +128,8 @@ router.post('/', async (req, res) => {
     lessonDate: payload.lessonDate,
     attended: payload.attended ?? false,
     type: payload.type || 'pakete-dahil',
+    packageId: activePackage?.id || null,
+    packageName: activePackage?.packageName || '',
     notes: payload.notes || '',
     createdAt: now
   }
@@ -70,28 +140,49 @@ router.post('/', async (req, res) => {
     const MemberPackage = (await import('../models/MemberPackage.js')).default
     const Attendance = (await import('../models/Attendance.js')).default
     const member = await Member.findOne({ id: payload.memberId })
-    if (member && payload.attended) {
-      if (payload.type === 'ekstra') {
-        member.extraCount = (member.extraCount || 0) + 1
+    if (member) {
+      if (payload.attended) {
+        // Present or Extra - increment counters and deduct lesson
+        if (payload.type === 'ekstra') {
+          member.extraCount = (member.extraCount || 0) + 1
+        } else {
+          member.attendedCount = (member.attendedCount || 0) + 1
+          member.remainingLessons = Math.max((member.totalLessons || 0) - (member.attendedCount || 0), 0)
+          const latestPkg = await MemberPackage.findOne({ memberId: payload.memberId }).sort({ id: -1 })
+          if (latestPkg && latestPkg.remainingLessons > 0) {
+            latestPkg.remainingLessons -= 1
+            await latestPkg.save()
+          }
+          
+          // Check if package is finished based on total lessons = attended count
+          if (isPackageFinished(member)) {
+            // Try to activate next package
+            const nextPackage = await activateNextPackage(payload.memberId)
+            if (!nextPackage) {
+              console.log(`No more packages available for member ${payload.memberId}`)
+            }
+          }
+        }
+        // Also create a generic Attendance record for history views
+        const now = new Date().toISOString()
+        await Attendance.create({
+          id: await (await import('../lib/sequence.js')).getNextId(Attendance),
+          memberId: payload.memberId,
+          checkInTime: now,
+          checkOutTime: null,
+          notes: `lesson:${payload.lessonId} date:${payload.lessonDate}`,
+          createdAt: now,
+        })
       } else {
-        member.attendedCount = (member.attendedCount || 0) + 1
-        member.remainingLessons = Math.max((member.totalLessons || 0) - (member.attendedCount || 0), 0)
+        // Absent - also deduct lesson count but don't increment attended count
         const latestPkg = await MemberPackage.findOne({ memberId: payload.memberId }).sort({ id: -1 })
         if (latestPkg && latestPkg.remainingLessons > 0) {
           latestPkg.remainingLessons -= 1
           await latestPkg.save()
         }
+        // Update member's remaining lessons count
+        member.remainingLessons = Math.max((member.remainingLessons || 0) - 1, 0)
       }
-      // Also create a generic Attendance record for history views
-      const now = new Date().toISOString()
-      await Attendance.create({
-        id: await (await import('../lib/sequence.js')).getNextId(Attendance),
-        memberId: payload.memberId,
-        checkInTime: now,
-        checkOutTime: null,
-        notes: `lesson:${payload.lessonId} date:${payload.lessonDate}`,
-        createdAt: now,
-      })
       await member.save()
     }
   } catch {}
@@ -109,9 +200,17 @@ router.get('/:id', async (req, res) => {
 // PUT /api/LessonAttendances/:id
 router.put('/:id', async (req, res) => {
   const id = Number(req.params.id)
+  
+  // Get active package for this member
+  const activePackage = await getActivePackageForMember(req.body.memberId || prev?.memberId)
+  
   const prev = await LessonAttendance.findOneAndUpdate(
     { id },
-    { ...req.body },
+    { 
+      ...req.body,
+      packageId: activePackage?.id || null,
+      packageName: activePackage?.packageName || ''
+    },
     { new: false }
   )
   if (!prev) return res.status(404).json({ message: 'LessonAttendance not found' })
@@ -124,8 +223,10 @@ router.put('/:id', async (req, res) => {
     if (member) {
       const newAttended = req.body.attended ?? prev.attended
       const newType = req.body.type ?? prev.type
+      
       // Revert previous effect
       if (prev.attended) {
+        // Was present/extra - revert counters and add back lesson
         if (prev.type === 'ekstra') {
           member.extraCount = Math.max((member.extraCount || 0) - 1, 0)
         } else {
@@ -137,9 +238,19 @@ router.put('/:id', async (req, res) => {
             await latestPkg.save()
           }
         }
+      } else {
+        // Was absent - add back lesson count
+        const latestPkg = await MemberPackage.findOne({ memberId: prev.memberId }).sort({ id: -1 })
+        if (latestPkg) {
+          latestPkg.remainingLessons = (latestPkg.remainingLessons || 0) + 1
+          await latestPkg.save()
+        }
+        member.remainingLessons = (member.remainingLessons || 0) + 1
       }
+      
       // Apply new effect
       if (newAttended) {
+        // Present or Extra - increment counters and deduct lesson
         if (newType === 'ekstra') {
           member.extraCount = (member.extraCount || 0) + 1
         } else {
@@ -161,6 +272,15 @@ router.put('/:id', async (req, res) => {
           notes: `lesson:${prev.lessonId} date:${prev.lessonDate}`,
           createdAt: now,
         })
+      } else {
+        // Absent - also deduct lesson count but don't increment attended count
+        const latestPkg = await MemberPackage.findOne({ memberId: prev.memberId }).sort({ id: -1 })
+        if (latestPkg && latestPkg.remainingLessons > 0) {
+          latestPkg.remainingLessons -= 1
+          await latestPkg.save()
+        }
+        // Update member's remaining lessons count
+        member.remainingLessons = Math.max((member.remainingLessons || 0) - 1, 0)
       }
       await member.save()
     }

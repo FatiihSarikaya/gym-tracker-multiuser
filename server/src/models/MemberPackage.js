@@ -9,7 +9,8 @@ const MemberPackageSchema = new mongoose.Schema(
     lessonCount: { type: Number, required: true },
     price: { type: Number, required: true },
     purchasedAt: { type: String, required: true },
-    remainingLessons: { type: Number, required: true }
+    remainingLessons: { type: Number, required: true },
+    isActive: { type: Boolean, default: true } // Aktif paket mi?
   },
   { collection: 'memberPackages' }
 )

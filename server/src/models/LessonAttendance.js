@@ -8,6 +8,8 @@ const LessonAttendanceSchema = new mongoose.Schema(
     lessonDate: { type: String, required: true },
     attended: { type: Boolean, default: false },
     type: { type: String, default: 'pakete-dahil' },
+    packageId: { type: Number, default: null }, // Hangi paketten kullanıldı
+    packageName: { type: String, default: '' }, // Paket adı (hızlı erişim için)
     notes: { type: String, default: '' },
     createdAt: { type: String }
   },

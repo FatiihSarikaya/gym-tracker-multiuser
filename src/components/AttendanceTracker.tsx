@@ -45,6 +45,8 @@ interface AttendanceRecord {
   time?: string
   lessonId?: number
   lesson?: Lesson
+  packageId?: number
+  packageName?: string
 }
 
 export default function AttendanceTracker() {
@@ -127,7 +129,9 @@ export default function AttendanceTracker() {
               status,
               time: attendance.notes || undefined,
               lesson: lesson,
-              lessonId: attendance.lessonId
+              lessonId: attendance.lessonId,
+              packageId: (attendance as any).packageId,
+              packageName: (attendance as any).packageName
             }
           } catch (error) {
             console.error(`Error loading details for attendance ${attendance.id}:`, error)
@@ -745,30 +749,54 @@ export default function AttendanceTracker() {
                           {record.member.firstName} {record.member.lastName}
                         </h4>
                         <p className="text-sm text-gray-500">{record.member.phoneNumber || 'Telefon yok'}</p>
+                        {record.packageName && (
+                          <p className="text-xs text-blue-600 font-medium">
+                            📦 {record.packageName}
+                          </p>
+                        )}
+                        {/* Check if member's package is finished */}
+                        {((record.member as any).totalLessons || 0) === ((record.member as any).attendedCount || 0) && (record.member as any).totalLessons > 0 && (
+                          <p className="text-xs text-red-600 font-medium">
+                            ⚠️ Ders hakkı bitti
+                          </p>
+                        )}
                       </div>
                       <div className="flex space-x-2">
-                        <Button
-                          variant={record.status === 'present' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleAttendanceChange(record.memberId, 'present')}
-                        >
-                          Geldi
-                        </Button>
-                        <Button
-                          variant={record.status === 'absent' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleAttendanceChange(record.memberId, 'absent')}
-                        >
-                          Gelmedi
-                        </Button>
-                        <Button
-                          variant={record.status === 'extra' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleAttendanceChange(record.memberId, 'extra')}
-                        >
-                          Ekstra
-                  </Button>
-                </div>
+                        {((record.member as any).totalLessons || 0) === ((record.member as any).attendedCount || 0) && (record.member as any).totalLessons > 0 ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled
+                            className="opacity-50"
+                          >
+                            Ders Hakkı Bitti
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant={record.status === 'present' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => handleAttendanceChange(record.memberId, 'present')}
+                            >
+                              Geldi
+                            </Button>
+                            <Button
+                              variant={record.status === 'absent' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => handleAttendanceChange(record.memberId, 'absent')}
+                            >
+                              Gelmedi
+                            </Button>
+                            <Button
+                              variant={record.status === 'extra' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => handleAttendanceChange(record.memberId, 'extra')}
+                            >
+                              Ekstra
+                            </Button>
+                          </>
+                        )}
+                      </div>
               </div>
             ))}
           </div>

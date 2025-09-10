@@ -43,16 +43,24 @@ router.post('/', async (req, res) => {
     if (payload.packageName) {
       const pack = await Package.findOne({ name: payload.packageName }).lean()
       if (pack) {
-        const pkgDoc = {
-          id: await getNextId(MemberPackage),
-          memberId: Number(payload.memberId),
-          packageName: pack.name,
-          lessonCount: pack.lessonCount,
-          price: pack.price,
-          purchasedAt: now,
-          remainingLessons: pack.lessonCount,
+        // Check if package already exists for this member to avoid duplicates
+        const existingPackage = await MemberPackage.findOne({ 
+          memberId: Number(payload.memberId), 
+          packageName: pack.name 
+        })
+        
+        if (!existingPackage) {
+          const pkgDoc = {
+            id: await getNextId(MemberPackage),
+            memberId: Number(payload.memberId),
+            packageName: pack.name,
+            lessonCount: pack.lessonCount,
+            price: pack.price,
+            purchasedAt: now,
+            remainingLessons: pack.lessonCount,
+          }
+          await MemberPackage.create(pkgDoc)
         }
-        await MemberPackage.create(pkgDoc)
       }
     }
   } catch {}
