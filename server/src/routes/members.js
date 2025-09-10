@@ -33,7 +33,6 @@ router.post('/', async (req, res) => {
       lastName: payload.lastName,
       email: payload.email,
       phoneNumber: payload.phoneNumber || '',
-      photoUrl: payload.photoUrl || '',
       dateOfBirth: payload.dateOfBirth,
       membershipStartDate: now,
       membershipEndDate: payload.membershipEndDate || null,

@@ -504,52 +504,7 @@ export default function MemberList() {
                     <Button variant="outline" onClick={() => setEditing(true)}>Düzenle</Button>
                   </div>
                 </div>
-                <div className="lg:col-span-1">
-                  <div className="border-2 border-dashed rounded-xl p-3 h-full flex flex-col items-center justify-center bg-gray-50">
-                    <div className="w-72 h-80 rounded-lg overflow-hidden bg-white border mb-3 flex items-center justify-center">
-                      {photoPreview ? (
-                        <img src={photoPreview} alt="Üye fotoğrafı" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-gray-400 text-sm text-center px-3">Üye Fotoğrafı<br/>Yüklenmedi</div>
-                      )}
-                    </div>
-                    <input id="photoInput" type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                      const f = e.target.files && e.target.files[0]
-                      if (!f) return
-                      try {
-                        const res = await apiService.uploadMemberPhoto(f)
-                        setPhotoStoredPath(res.url)
-                        setPhotoPreview(`${UPLOAD_ORIGIN}${res.url}`)
-                      } catch (err) {
-                        console.error('Upload failed', err)
-                        alert('Yükleme başarısız')
-                      }
-                    }} />
-                    <Button onClick={() => (document.getElementById('photoInput') as HTMLInputElement)?.click()}>Fotoğraf Yükle</Button>
-                    <div className="mt-2 flex gap-2">
-                      <Button variant="outline" onClick={async () => {
-                        if (!selectedMember) return
-                        try {
-                          await apiService.updateMember(selectedMember.id, {
-                            // @ts-ignore
-                            firstName: selectedMember.firstName,
-                            lastName: selectedMember.lastName,
-                            email: selectedMember.email,
-                            phoneNumber: selectedMember.phoneNumber,
-                            dateOfBirth: selectedMember.dateOfBirth,
-                            membershipType: selectedMember.membershipType,
-                            isActive: selectedMember.isActive,
-                            photoUrl: photoStoredPath || ''
-                          })
-                          alert('Fotoğraf kaydedildi')
-                        } catch (e) {
-                          console.error(e)
-                          alert('Fotoğraf kaydedilemedi')
-                        }
-                      }}>Kaydet</Button>
-                    </div>
-                  </div>
-                </div>
+                {/* Fotoğraf bölümü kaldırıldı */}
               </div>
             ) : (
               <InlineEditForm member={selectedMember} onCancel={() => setEditing(false)} onSave={handleUpdate} />

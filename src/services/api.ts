@@ -7,7 +7,6 @@ export interface Member {
   lastName: string;
   email: string;
   phoneNumber?: string;
-  photoUrl?: string;
   dateOfBirth: string;
   membershipStartDate: string;
   membershipEndDate?: string;
@@ -24,7 +23,6 @@ export interface CreateMemberDto {
   lastName: string;
   email: string;
   phoneNumber?: string;
-  photoUrl?: string;
   dateOfBirth: string;
   membershipType: string;
   totalLessons?: number;
@@ -36,7 +34,6 @@ export interface UpdateMemberDto {
   lastName: string;
   email: string;
   phoneNumber?: string;
-  photoUrl?: string;
   dateOfBirth: string;
   membershipType: string;
   isActive: boolean;
@@ -179,18 +176,7 @@ class ApiService {
     this.baseUrl = baseUrl;
   }
 
-  // Uploads
-  async uploadMemberPhoto(file: File): Promise<{ url: string }> {
-    const url = `${this.baseUrl}/Uploads/member-photo`;
-    const form = new FormData();
-    form.append('photo', file);
-    const response = await fetch(url, {
-      method: 'POST',
-      body: form,
-    });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
-  }
+  // Uploads removed (no photo management)
 
   private async request<T>(
     endpoint: string,
