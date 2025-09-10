@@ -385,8 +385,8 @@ export default function MemberList() {
           </CardHeader>
           <CardContent>
             {!editing ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-3">
+              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                <div className="space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <p className="text-xs text-gray-500">Email</p>
