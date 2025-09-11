@@ -38,7 +38,7 @@ export default function Dashboard() {
   const handleNewMemberSubmit = async (memberData: CreateMemberDto) => {
     try {
       console.log('New member data:', memberData)
-      console.log('API URL:', 'http://localhost:5000/api/Members')
+      console.log('API URL:', '/api/Members')
       
       // API'ye yeni üye ekleme isteği gönder
       const newMember = await apiService.createMember(memberData)

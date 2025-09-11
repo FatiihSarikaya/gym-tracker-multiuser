@@ -26,8 +26,8 @@ export default function MemberList() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoStoredPath, setPhotoStoredPath] = useState<string | null>(null)
   const [showPackageModal, setShowPackageModal] = useState(false)
-  const API_BASE = (typeof process !== 'undefined' && (process as any).env && (process as any).env.NEXT_PUBLIC_API_BASE_URL) ? (process as any).env.NEXT_PUBLIC_API_BASE_URL as string : 'http://localhost:5000/api'
-  const UPLOAD_ORIGIN = API_BASE.replace(/\/api\/?$/, '')
+  const API_BASE = '/api'
+  const UPLOAD_ORIGIN = typeof window !== 'undefined' ? window.location.origin : ''
 
   useEffect(() => {
     loadMembers()
