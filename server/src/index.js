@@ -18,20 +18,46 @@ import './utils/cleanupScheduler.js'
 const app = express()
 const PORT = process.env.PORT || 5000
 
-app.use(cors())
+// ✅ CORS ayarlarını genişlet
+const allowedOrigins = [
+  
+  'https://gym-tracker-hiwo.vercel.app', // frontend adresin
+  'http://localhost:3000'                // geliştirme için
+]
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+
+// Preflight için
+app.options('*', cors())
+
 app.use(express.json())
 app.use(morgan('dev'))
 
-// Initialize DB and attach to request
+// Initialize DB
 app.use(async (req, res, next) => {
   try {
-    // keep LowDB for now until routes are refactored; ensure Mongo connection is established
     req.db = await createDb()
     await connectMongo()
     next()
   } catch (err) {
     next(err)
   }
+})
+
+// ✅ Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', service: 'GymTracker API', time: new Date() })
 })
 
 app.get('/', (req, res) => {
@@ -48,7 +74,7 @@ app.use('/api/MemberPackages', memberPackagesRouter)
 app.use('/api/MemberLessons', memberLessonsRouter)
 app.use('/api/Uploads', uploadsRouter)
 
-// Serve uploaded files statically
+// Serve uploaded files
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'public', 'uploads')))
 
 // 404
@@ -66,14 +92,11 @@ app.listen(PORT, () => {
   console.log(`GymTracker API listening on http://localhost:${PORT}`)
 })
 
-// Prevent process from exiting on unexpected errors; log and keep alive
+// Prevent process exit
 process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err)
 })
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
   console.error('[unhandledRejection]', reason)
 })
-
-
-
