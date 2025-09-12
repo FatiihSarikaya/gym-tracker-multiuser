@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import MemberPackage from '../../models/MemberPackage'
-import Package from '../../models/Package'
-import { getNextId } from '../../lib/sequence'
+import dbConnect from '@/lib/db'
+import MemberPackage from '@/models/MemberPackage'
+import Package from '@/models/Package'
+import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {

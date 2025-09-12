@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import Member from '../../models/Member'
-import { getNextId } from '../../lib/sequence'
+import dbConnect from '@/lib/db'
+import Member from '@/models/Member'
+import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const initialLessons = Number(payload.totalLessons) || 0
         const packageName = payload.packageName || payload.membershipType || 'Paket'
         if (initialLessons > 0) {
-          const MemberPackage = (await import('../../models/MemberPackage')).default
+          const MemberPackage = (await import('@/models/MemberPackage')).default
           const existingPackage = await MemberPackage.findOne({ memberId: member.id, packageName })
           if (!existingPackage) {
             const packageData = {

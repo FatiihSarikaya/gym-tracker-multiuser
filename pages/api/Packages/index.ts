@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import Package from '../../models/Package'
+import dbConnect from '@/lib/db'
+import Package from '@/models/Package'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {

@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import LessonAttendance from '../../models/LessonAttendance'
-import { getNextId } from '../../lib/sequence'
+import dbConnect from '@/lib/db'
+import LessonAttendance from '@/models/LessonAttendance'
+import { getNextId } from '@/lib/sequence'
 
 async function getActivePackageForMember(memberId: number) {
   try {
-    const MemberPackage = (await import('../../models/MemberPackage')).default
+    const MemberPackage = (await import('@/models/MemberPackage')).default
     const packages = await MemberPackage.find({ memberId }).sort({ id: 1 }).lean()
     for (const pkg of packages) {
       if (pkg.remainingLessons > 0) return pkg
@@ -25,12 +25,12 @@ function isPackageFinished(member: any) {
 
 async function activateNextPackage(memberId: number) {
   try {
-    const MemberPackage = (await import('../../models/MemberPackage')).default
+    const MemberPackage = (await import('@/models/MemberPackage')).default
     const packages = await MemberPackage.find({ memberId }).sort({ id: 1 }).lean()
     for (const pkg of packages) {
       if (!pkg.isActive) {
         await MemberPackage.updateOne({ id: pkg.id }, { isActive: true, remainingLessons: pkg.lessonCount })
-        const Member = (await import('../../models/Member')).default
+        const Member = (await import('@/models/Member')).default
         const member = await Member.findOne({ id: memberId })
         if (member) {
           member.totalLessons = (member.totalLessons || 0) + pkg.lessonCount
@@ -82,9 +82,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     await LessonAttendance.create(item)
     try {
-      const Member = (await import('../../models/Member')).default
-      const MemberPackage = (await import('../../models/MemberPackage')).default
-      const Attendance = (await import('../../models/Attendance')).default
+      const Member = (await import('@/models/Member')).default
+      const MemberPackage = (await import('@/models/MemberPackage')).default
+      const Attendance = (await import('@/models/Attendance')).default
       const member = await Member.findOne({ id: payload.memberId })
       if (member) {
         if (payload.attended) {
@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
           const now2 = new Date().toISOString()
           await Attendance.create({
-            id: await (await import('../../lib/sequence')).getNextId(Attendance as any),
+            id: await (await import('@/lib/sequence')).getNextId(Attendance as any),
             memberId: payload.memberId,
             checkInTime: now2,
             checkOutTime: null,

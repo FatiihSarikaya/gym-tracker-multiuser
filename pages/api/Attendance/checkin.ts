@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import Attendance from '../../models/Attendance'
-import MemberPackage from '../../models/MemberPackage'
-import { getNextId } from '../../lib/sequence'
+import dbConnect from '@/lib/db'
+import Attendance from '@/models/Attendance'
+import MemberPackage from '@/models/MemberPackage'
+import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await dbConnect()
@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await latestPkg.save()
   }
   try {
-    const Member = (await import('../../models/Member')).default
+    const Member = (await import('@/models/Member')).default
     const member = await Member.findOne({ id: memberId })
     if (member) {
       member.attendedCount = (member.attendedCount || 0) + 1

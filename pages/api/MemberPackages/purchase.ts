@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import MemberPackage from '../../models/MemberPackage'
-import Package from '../../models/Package'
-import { getNextId } from '../../lib/sequence'
+import dbConnect from '@/lib/db'
+import MemberPackage from '@/models/MemberPackage'
+import Package from '@/models/Package'
+import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await dbConnect()
@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!pack) return res.status(404).json({ message: 'Package not found' })
   const p: any = pack as any
   const now = new Date().toISOString()
-  const Member = (await import('../../models/Member')).default
+  const Member = (await import('@/models/Member')).default
   const member = await Member.findOne({ id: Number(memberId) })
   if (!member) return res.status(404).json({ message: 'Member not found' })
 

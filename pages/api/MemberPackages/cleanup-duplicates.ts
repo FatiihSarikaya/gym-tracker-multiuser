@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import MemberPackage from '../../models/MemberPackage'
-import Member from '../../models/Member'
+import dbConnect from '@/lib/db'
+import MemberPackage from '@/models/MemberPackage'
+import Member from '@/models/Member'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await dbConnect()

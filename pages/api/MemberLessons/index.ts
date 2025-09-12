@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import dbConnect from '../../lib/db'
-import MemberLesson from '../../models/MemberLesson'
-import Lesson from '../../models/Lesson'
-import { getNextId } from '../../lib/sequence'
+import dbConnect from '@/lib/db'
+import MemberLesson from '@/models/MemberLesson'
+import Lesson from '@/models/Lesson'
+import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!memberId || !lessonId || !startDate) return res.status(400).json({ message: 'memberId, lessonId, startDate required' })
     const lesson = await Lesson.findOne({ id: Number(lessonId) }).lean()
     if (!lesson) return res.status(404).json({ message: 'Lesson not found' })
-    const Member = (await import('../../models/Member')).default
+    const Member = (await import('@/models/Member')).default
     const member = await Member.findOne({ id: Number(memberId) }).lean()
     if (!member) return res.status(404).json({ message: 'Member not found' })
 
@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const attendedCount = m.attendedCount || 0
     const isPackageFinished = totalLessons === attendedCount && totalLessons > 0
     if (isPackageFinished) {
-      const MemberPackage = (await import('../../models/MemberPackage')).default
+      const MemberPackage = (await import('@/models/MemberPackage')).default
       const waitingPackage = await MemberPackage.findOne({ memberId: Number(memberId), isActive: false }).sort({ id: 1 }).lean()
       if (waitingPackage) {
         const wp: any = waitingPackage as any
