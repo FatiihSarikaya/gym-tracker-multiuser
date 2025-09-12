@@ -5,10 +5,12 @@ import { getNextId } from '../../lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    await dbConnect()
+    const db = await dbConnect()
+    console.log("Connected to DB:", db.connection.host)
 
     if (req.method === 'GET') {
       const members = await Member.find({}).lean()
+      console.log("Fetched members:", members.length)
       return res.status(200).json(members)
     }
 
@@ -81,9 +83,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.setHeader('Allow', ['GET', 'POST'])
     return res.status(405).json({ message: 'Method Not Allowed' })
-  } catch (error) {
-    console.error('Error in Members/index:', error)
-    return res.status(500).json({ message: 'Internal Server Error', error: error instanceof Error ? error.message : 'Unknown error' })
+  } catch (err: any) {
+    console.error("API error:", err.message)
+    return res.status(500).json({ error: err.message })
   }
 }
 
