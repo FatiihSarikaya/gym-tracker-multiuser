@@ -5,8 +5,8 @@ import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const db = await dbConnect()
-    console.log("Connected to DB:", db.connection.host)
+    await dbConnect()
+    console.log("Connected to DB")
 
     if (req.method === 'GET') {
       const members = await Member.find({}).lean()
