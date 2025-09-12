@@ -3,16 +3,17 @@ import dbConnect from '@/lib/db'
 import Member from '@/models/Member'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await dbConnect()
+  try {
+    await dbConnect()
 
-  const id = Number(req.query.id)
-  if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' })
+    const id = Number(req.query.id)
+    if (Number.isNaN(id)) return res.status(400).json({ message: 'Invalid id' })
 
-  if (req.method === 'GET') {
-    const member = await Member.findOne({ id }).lean()
-    if (!member) return res.status(404).json({ message: 'Member not found' })
-    return res.status(200).json(member)
-  }
+    if (req.method === 'GET') {
+      const member = await Member.findOne({ id }).lean()
+      if (!member) return res.status(404).json({ message: 'Member not found' })
+      return res.status(200).json(member)
+    }
 
   if (req.method === 'PUT') {
     try {
@@ -76,8 +77,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
-  return res.status(405).json({ message: 'Method Not Allowed' })
+    res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
+    return res.status(405).json({ message: 'Method Not Allowed' })
+  } catch (error) {
+    console.error('Error in Members/[id]:', error)
+    return res.status(500).json({ message: 'Internal Server Error', error: error instanceof Error ? error.message : 'Unknown error' })
+  }
 }
 
 

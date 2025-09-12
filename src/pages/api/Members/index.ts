@@ -4,12 +4,13 @@ import Member from '@/models/Member'
 import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await dbConnect()
+  try {
+    await dbConnect()
 
-  if (req.method === 'GET') {
-    const members = await Member.find({}).lean()
-    return res.status(200).json(members)
-  }
+    if (req.method === 'GET') {
+      const members = await Member.find({}).lean()
+      return res.status(200).json(members)
+    }
 
   if (req.method === 'POST') {
     try {
@@ -78,8 +79,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
-  res.setHeader('Allow', ['GET', 'POST'])
-  return res.status(405).json({ message: 'Method Not Allowed' })
+    res.setHeader('Allow', ['GET', 'POST'])
+    return res.status(405).json({ message: 'Method Not Allowed' })
+  } catch (error) {
+    console.error('Error in Members/index:', error)
+    return res.status(500).json({ message: 'Internal Server Error', error: error instanceof Error ? error.message : 'Unknown error' })
+  }
 }
 
 

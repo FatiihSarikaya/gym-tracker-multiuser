@@ -5,12 +5,13 @@ import Lesson from '@/models/Lesson'
 import { getNextId } from '@/lib/sequence'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await dbConnect()
+  try {
+    await dbConnect()
 
-  if (req.method === 'GET') {
-    const items = await MemberLesson.find({}).lean()
-    return res.status(200).json(items)
-  }
+    if (req.method === 'GET') {
+      const items = await MemberLesson.find({}).lean()
+      return res.status(200).json(items)
+    }
 
   if (req.method === 'POST') {
     const { memberId, lessonId, daysOfWeek = [], startDate, endDate = null } = req.body || {}
@@ -60,8 +61,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(201).json(doc)
   }
 
-  res.setHeader('Allow', ['GET', 'POST'])
-  return res.status(405).json({ message: 'Method Not Allowed' })
+    res.setHeader('Allow', ['GET', 'POST'])
+    return res.status(405).json({ message: 'Method Not Allowed' })
+  } catch (error) {
+    console.error('Error in MemberLessons/index:', error)
+    return res.status(500).json({ message: 'Internal Server Error', error: error instanceof Error ? error.message : 'Unknown error' })
+  }
 }
 
 
