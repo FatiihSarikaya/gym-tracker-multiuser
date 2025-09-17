@@ -196,12 +196,14 @@ class ApiService {
       ...options,
     };
 
-    console.log('Making API request to:', url);
-    console.log('Request config:', config);
+    // Only log in development mode
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Making API request to:', url);
+      console.log('Request config:', config);
+    }
 
     try {
       const response = await fetch(url, config);
-      console.log('Response received:', response.status, response.statusText);
       
       if (!response.ok) {
         const err = new Error(`HTTP error! status: ${response.status}`) as any
@@ -220,12 +222,14 @@ class ApiService {
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
-      console.error('Request URL:', url);
-      console.error('Request config:', config);
+      // Only log errors in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.error('API request failed:', error);
+        console.error('Request URL:', url);
+        console.error('Request config:', config);
+      }
       throw error;
     }
   }

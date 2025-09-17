@@ -255,13 +255,8 @@ export default function Dashboard() {
 
   const handleNewMemberSubmit = async (memberData: CreateMemberDto) => {
     try {
-      console.log('New member data:', memberData)
-      console.log('API URL:', '/api/Members')
-      
       // API'ye yeni üye ekleme isteği gönder
       const newMember = await apiService.createMember(memberData)
-      
-      console.log('Member created successfully:', newMember)
       push({ variant: 'success', title: 'Başarılı', message: 'Yeni üye eklendi.' })
       setIsNewMemberModalOpen(false)
       
@@ -269,12 +264,15 @@ export default function Dashboard() {
       // window.location.reload()
       
     } catch (error: any) {
-      console.error('Error creating member:', error)
-      console.error('Error details:', {
-        message: error?.message,
-        stack: error?.stack,
-        name: error?.name
-      })
+      // Only log detailed errors in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error creating member:', error)
+        console.error('Error details:', {
+          message: error?.message,
+          stack: error?.stack,
+          name: error?.name
+        })
+      }
       push({ variant: 'error', title: 'Hata', message: `Üye eklenemedi: ${error?.message || 'Bilinmeyen hata'}` })
     }
   }
@@ -284,7 +282,6 @@ export default function Dashboard() {
   }
 
   const testBackendConnection = async () => {
-    console.log('Testing backend connection...')
     const isConnected = await testApiConnection()
     if (isConnected) {
       push({ variant: 'success', message: 'Backend bağlantısı başarılı' })
@@ -295,15 +292,12 @@ export default function Dashboard() {
 
   const handleAttendanceSubmit = async (attendanceData: any) => {
     try {
-      console.log('Processing attendance data:', attendanceData)
-      
       for (const attendance of attendanceData) {
         const { memberId, status } = attendance
         
         if (status === 'present') {
           // Üye geldi - check-in yap (ders sayısını düşür)
           await apiService.checkIn({ memberId })
-          console.log(`Member ${memberId} checked in successfully`)
         }
         // 'absent' durumunda hiçbir şey yapmıyoruz
       }
@@ -367,7 +361,6 @@ export default function Dashboard() {
   ]
 
   const renderContent = () => {
-    console.log('Active tab:', activeTab)
     switch (activeTab) {
       case 'attendance':
         return <AttendanceTracker />
@@ -447,10 +440,7 @@ export default function Dashboard() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => {
-                  console.log('Button clicked:', tab.id)
-                  setActiveTab(tab.id)
-                }}
+                onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-600 text-blue-700'
