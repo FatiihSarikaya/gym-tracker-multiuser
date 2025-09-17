@@ -4,13 +4,19 @@ import Payment from '@/models/Payment'
 import MemberPackage from '@/models/MemberPackage'
 import Package from '@/models/Package'
 import { getNextId } from '@/lib/sequence'
+import { requireAuth } from '@/lib/session'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const user = await requireAuth(req, res)
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
     await dbConnect()
 
     if (req.method === 'GET') {
-      const items = await Payment.find({}).lean()
+      const items = await Payment.find({ userId: user.id }).lean()
       return res.status(200).json(items)
     }
 
@@ -19,6 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const now = new Date().toISOString()
     const payment = {
       id: await getNextId(Payment),
+      userId: user.id,
       memberId: payload.memberId,
       amount: payload.amount,
       paymentType: payload.paymentType,
@@ -33,13 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await Payment.create(payment)
     try {
       if (payload.packageName) {
-        const pack = await Package.findOne({ name: payload.packageName }).lean()
+        const pack = await Package.findOne({ userId: user.id, name: payload.packageName }).lean()
         if (pack) {
           const p: any = pack as any
-          const existingPackage = await MemberPackage.findOne({ memberId: Number(payload.memberId), packageName: p.name })
+          const existingPackage = await MemberPackage.findOne({ userId: user.id, memberId: Number(payload.memberId), packageName: p.name })
           if (!existingPackage) {
             const pkgDoc = {
               id: await getNextId(MemberPackage),
+              userId: user.id,
               memberId: Number(payload.memberId),
               packageName: p.name,
               lessonCount: p.lessonCount,

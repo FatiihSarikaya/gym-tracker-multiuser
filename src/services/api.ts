@@ -135,6 +135,11 @@ export interface CreateLessonAttendanceDto {
   notes?: string;
 }
 
+export interface CheckInDto {
+  memberId: number;
+  notes?: string;
+}
+
 export interface PackageDef { name: string; lessonCount: number; price: number }
 export interface MemberPackagePurchase { memberId: number; packageName: string }
 
@@ -268,6 +273,10 @@ class ApiService {
 
   async getAttendancesByMember(memberId: number): Promise<Attendance[]> {
     return this.request<Attendance[]>(`/Attendance/member/${memberId}`);
+  }
+
+  async getAttendancesByDate(date: string): Promise<Attendance[]> {
+    return this.request<Attendance[]>(`/Attendance/date/${date}`);
   }
 
   async checkIn(checkInData: CheckInDto): Promise<Attendance> {

@@ -2,11 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import dbConnect from '@/lib/db'
 import LessonAttendance from '@/models/LessonAttendance'
 import { getNextId } from '@/lib/sequence'
+import { requireAuth } from '@/lib/session'
 
-async function getActivePackageForMember(memberId: number) {
+async function getActivePackageForMember(memberId: number, userId: number) {
   try {
     const MemberPackage = (await import('@/models/MemberPackage')).default
-    const packages = await MemberPackage.find({ memberId }).sort({ id: 1 }).lean()
+    const packages = await MemberPackage.find({ userId, memberId }).sort({ id: 1 }).lean()
     for (const pkg of packages) {
       if (pkg.remainingLessons > 0) return pkg
     }
@@ -23,15 +24,15 @@ function isPackageFinished(member: any) {
   return totalLessons === attendedCount && totalLessons > 0
 }
 
-async function activateNextPackage(memberId: number) {
+async function activateNextPackage(memberId: number, userId: number) {
   try {
     const MemberPackage = (await import('@/models/MemberPackage')).default
-    const packages = await MemberPackage.find({ memberId }).sort({ id: 1 }).lean()
+    const packages = await MemberPackage.find({ userId, memberId }).sort({ id: 1 }).lean()
     for (const pkg of packages) {
       if (!pkg.isActive) {
         await MemberPackage.updateOne({ id: pkg.id }, { isActive: true, remainingLessons: pkg.lessonCount })
         const Member = (await import('@/models/Member')).default
-        const member = await Member.findOne({ id: memberId })
+        const member = await Member.findOne({ userId, id: memberId })
         if (member) {
           member.totalLessons = (member.totalLessons || 0) + pkg.lessonCount
           member.remainingLessons = (member.remainingLessons || 0) + pkg.lessonCount
@@ -50,24 +51,30 @@ async function activateNextPackage(memberId: number) {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const user = await requireAuth(req, res)
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
     await dbConnect()
 
     if (req.method === 'GET') {
-      const items = await LessonAttendance.find({}).lean()
+      const items = await LessonAttendance.find({ userId: user.id }).lean()
       return res.status(200).json(items)
     }
 
   if (req.method === 'POST') {
     const payload = req.body || {}
     const now = new Date().toISOString()
-    const existing = await LessonAttendance.findOne({ memberId: payload.memberId, lessonId: payload.lessonId, lessonDate: payload.lessonDate }).lean()
+    const existing = await LessonAttendance.findOne({ userId: user.id, memberId: payload.memberId, lessonId: payload.lessonId, lessonDate: payload.lessonDate }).lean()
     if (existing) {
       const ex: any = existing as any
       return res.status(409).json({ message: 'Attendance already exists for this member, lesson and date', id: ex?.id })
     }
-    const activePackage = await getActivePackageForMember(payload.memberId)
+    const activePackage = await getActivePackageForMember(payload.memberId, user.id)
     const item = {
       id: await getNextId(LessonAttendance),
+      userId: user.id,
       memberId: payload.memberId,
       lessonId: payload.lessonId,
       lessonDate: payload.lessonDate,
@@ -85,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const Member = (await import('@/models/Member')).default
       const MemberPackage = (await import('@/models/MemberPackage')).default
       const Attendance = (await import('@/models/Attendance')).default
-      const member = await Member.findOne({ id: payload.memberId })
+      const member = await Member.findOne({ userId: user.id, id: payload.memberId })
       if (member) {
         if (payload.attended) {
           if (payload.type === 'ekstra') {
@@ -93,18 +100,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           } else {
             member.attendedCount = (member.attendedCount || 0) + 1
             member.remainingLessons = Math.max((member.totalLessons || 0) - (member.attendedCount || 0), 0)
-            const latestPkg = await MemberPackage.findOne({ memberId: payload.memberId }).sort({ id: -1 })
+            const latestPkg = await MemberPackage.findOne({ userId: user.id, memberId: payload.memberId }).sort({ id: -1 })
             if (latestPkg && latestPkg.remainingLessons > 0) {
               latestPkg.remainingLessons -= 1
               await latestPkg.save()
             }
             if (isPackageFinished(member)) {
-              await activateNextPackage(payload.memberId)
+              await activateNextPackage(payload.memberId, user.id)
             }
           }
           const now2 = new Date().toISOString()
           await Attendance.create({
             id: await (await import('@/lib/sequence')).getNextId(Attendance as any),
+            userId: user.id,
             memberId: payload.memberId,
             checkInTime: now2,
             checkOutTime: null,
@@ -112,7 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             createdAt: now2,
           })
         } else {
-          const latestPkg = await MemberPackage.findOne({ memberId: payload.memberId }).sort({ id: -1 })
+          const latestPkg = await MemberPackage.findOne({ userId: user.id, memberId: payload.memberId }).sort({ id: -1 })
           if (latestPkg && latestPkg.remainingLessons > 0) {
             latestPkg.remainingLessons -= 1
             await latestPkg.save()

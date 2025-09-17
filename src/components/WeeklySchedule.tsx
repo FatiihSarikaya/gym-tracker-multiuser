@@ -4,7 +4,7 @@
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
  import { Button } from '@/components/ui/button'
  import { Badge } from '@/components/ui/badge'
- import { Calendar, Clock, Users, Plus } from 'lucide-react'
+ import { Calendar, Clock, Users, Plus, CheckCircle } from 'lucide-react'
  import { apiService } from '@/services/api'
 
  export default function WeeklySchedule() {
@@ -16,6 +16,24 @@
      const d = new Date(dateISO)
      const names = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
      return names[d.getDay()]
+   }
+
+   // Ders ve saatin geçmiş olup olmadığını kontrol et
+   const isLessonPast = (dateISO: string, time: string) => {
+     const now = new Date()
+     const lessonDate = new Date(dateISO)
+     
+     // Eğer tarih bugünden önceyse kesinlikle geçmiş
+     if (lessonDate.toDateString() !== now.toDateString()) {
+       return lessonDate < now
+     }
+     
+     // Aynı günse saati kontrol et
+     const [hours, minutes] = time.split(':').map(Number)
+     const lessonTime = new Date(lessonDate)
+     lessonTime.setHours(hours, minutes, 0, 0)
+     
+     return lessonTime < now
    }
 
    const weekRange = useMemo(() => {
@@ -32,15 +50,14 @@
    useEffect(() => {
      const load = async () => {
        try {
+         // Haftalık program için: hem atanmış dersler hem de yeni oluşturulan dersler
          const members = await apiService.getMembers()
-         const perMember = await Promise.all(
+         
+         // 1. Member-lesson assignments'tan gelen veriler
+         const assignmentSessions = await Promise.all(
            members.map(async (m: any) => {
              try {
-               const [pkgs, assigns] = await Promise.all([
-                 apiService.getMemberPackages(m.id) as Promise<any[]>,
-                 apiService.getMemberLessonsByMember(m.id) as Promise<any[]>
-               ])
-               const pkgName = pkgs && pkgs.length > 0 ? `${pkgs[0].packageName}` : '-'
+               const assigns = await apiService.getMemberLessonsByMember(m.id) as any[]
                const detailed = await Promise.all(
                  (assigns || []).map(async (a: any) => {
                    const l = await apiService.getLesson(a.lessonId)
@@ -48,17 +65,66 @@
                      date: a.startDate,
                      time: l?.startTime || '',
                      member: `${m.firstName} ${m.lastName}`,
-                     type: l?.name || '-'
+                     type: l?.name || '-',
+                     source: 'assignment'
                    }
                  })
                )
-               // filter to next 7 days
                return detailed.filter(s => s.date && weekRange.includes(s.date))
              } catch {
                return []
              }
            })
          )
+         
+         // 2. Yeni oluşturulan lesson'lar (lessonDate field'ı olan)
+         const weekLessons = await Promise.all(
+           weekRange.map(async (date) => {
+             try {
+               const lessons = await apiService.getLessonsByDate(date) as any[]
+               const lessonSessions = await Promise.all(
+                 lessons.map(async (lesson: any) => {
+                   // Bu lesson'a atanmış üyeleri bul (MemberLesson'dan)
+                   try {
+                     const memberLessons = await apiService.getMemberLessonsByLessonAndDate(lesson.id, date) as any[]
+                     return memberLessons.map((ml: any) => {
+                       const member = members.find((m: any) => m.id === ml.memberId)
+                       return {
+                         date,
+                         time: lesson.startTime || '',
+                         member: member ? `${member.firstName} ${member.lastName}` : 'Unknown',
+                         type: lesson.name || '-',
+                         source: 'lesson'
+                       }
+                     })
+                   } catch {
+                     return []
+                   }
+                 })
+               )
+               return ([] as any[]).concat(...lessonSessions)
+             } catch {
+               return []
+             }
+           })
+         )
+         
+         // Tüm session'ları birleştir
+         const allSessions = [
+           ...([] as any[]).concat(...assignmentSessions),
+           ...([] as any[]).concat(...weekLessons)
+         ]
+         
+         // Duplicate'leri temizle (aynı member+date+time kombinasyonu)
+         const uniqueSessions = allSessions.filter((session, index, arr) => {
+           return index === arr.findIndex(s => 
+             s.member === session.member && 
+             s.date === session.date && 
+             s.time === session.time
+           )
+         })
+         
+         const perMember = [uniqueSessions]
          const flat = ([] as any[]).concat(...perMember as any)
          const grouped: Record<string, { time: string; member: string; type: string }[]> = {}
          for (const s of flat) {
@@ -201,28 +267,40 @@
                 const hours = Object.keys(byHour).sort()
                 return (
                   <div className="space-y-3">
-                    {hours.map((h) => (
-                      <details key={h} className="border rounded-lg">
-                        <summary className="flex items-center justify-between p-3 cursor-pointer select-none">
-                          <div className="flex items-center gap-2">
-                            <div className="p-2 rounded-full bg-blue-100"><Clock className="w-4 h-4 text-blue-600" /></div>
-                            <span className="font-medium text-gray-900">{h}</span>
-                          </div>
-                          <Badge variant="outline" className="text-xs">{byHour[h].length} üye</Badge>
-                        </summary>
-                        <div className="divide-y">
-                          {byHour[h].map((s, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-3">
-                              <div>
-                                <p className="font-medium text-gray-900">{s.member}</p>
-                                <p className="text-sm text-gray-500">{s.type}</p>
+                    {hours.map((h) => {
+                      const isPast = isLessonPast(dateISO, h)
+                      return (
+                        <details key={h} className="border rounded-lg">
+                          <summary className="flex items-center justify-between p-3 cursor-pointer select-none">
+                            <div className="flex items-center gap-2">
+                              <div className={`p-2 rounded-full ${isPast ? 'bg-green-100' : 'bg-blue-100'}`}>
+                                {isPast ? (
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <Clock className="w-4 h-4 text-blue-600" />
+                                )}
                               </div>
-                              <Badge variant="outline" className="text-xs">{s.type}</Badge>
+                              <span className={`font-medium ${isPast ? 'text-green-900' : 'text-gray-900'}`}>
+                                {h}
+                                {isPast && <span className="ml-2 text-green-600">✓</span>}
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                      </details>
-                    ))}
+                            <Badge variant="outline" className="text-xs">{byHour[h].length} üye</Badge>
+                          </summary>
+                          <div className="divide-y">
+                            {byHour[h].map((s, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-3">
+                                <div>
+                                  <p className="font-medium text-gray-900">{s.member}</p>
+                                  <p className="text-sm text-gray-500">{s.type}</p>
+                                </div>
+                                <Badge variant="outline" className="text-xs">{s.type}</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )
+                    })}
                   </div>
                 )
               })()}

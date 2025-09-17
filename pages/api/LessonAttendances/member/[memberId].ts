@@ -1,17 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import dbConnect from '@/lib/db'
 import LessonAttendance from '@/models/LessonAttendance'
+import { requireAuth } from '@/lib/session'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await dbConnect()
-  const memberId = Number(req.query.memberId)
-  if (Number.isNaN(memberId)) return res.status(400).json({ message: 'Invalid memberId' })
-  if (req.method === 'GET') {
-    const list = await LessonAttendance.find({ memberId }).lean()
-    return res.status(200).json(list)
+  try {
+    const user = await requireAuth(req, res)
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
+    await dbConnect()
+    const memberId = Number(req.query.memberId)
+    if (Number.isNaN(memberId)) return res.status(400).json({ message: 'Invalid memberId' })
+    if (req.method === 'GET') {
+      const list = await LessonAttendance.find({ userId: user.id, memberId }).lean()
+      return res.status(200).json(list)
+    }
+    res.setHeader('Allow', ['GET'])
+    return res.status(405).json({ message: 'Method Not Allowed' })
+  } catch (error) {
+    console.error('LessonAttendances member error:', error)
+    return res.status(500).json({ message: 'Internal server error' })
   }
-  res.setHeader('Allow', ['GET'])
-  return res.status(405).json({ message: 'Method Not Allowed' })
 }
 
 

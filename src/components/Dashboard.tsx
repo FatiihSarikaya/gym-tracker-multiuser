@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,7 +15,9 @@ import {
   Clock,
   Plus,
   Search,
-  Filter
+  Filter,
+  LogOut,
+  User
 } from 'lucide-react'
 import AttendanceTracker from '@/components/AttendanceTracker'
 import PaymentTracker from '@/components/PaymentTracker'
@@ -29,11 +33,225 @@ import { apiService, CreateMemberDto, testApiConnection } from '@/services/api'
 import { useToast } from '@/components/ui/toast'
 
 export default function Dashboard() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('dashboard')
   const { push } = useToast()
   const [isNewMemberModalOpen, setIsNewMemberModalOpen] = useState(false)
   const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false)
   const [isLessonPlanModalOpen, setIsLessonPlanModalOpen] = useState(false)
+  
+  // Dashboard stats state
+  const [dashboardStats, setDashboardStats] = useState({
+    activeMembers: 0,
+    todayAttendance: 0,
+    pendingPayments: 0,
+    weeklyLessons: 0,
+    loading: true
+  })
+
+  // Load dashboard stats
+  const loadDashboardStats = async () => {
+    try {
+      setDashboardStats(prev => ({ ...prev, loading: true }))
+      
+      // 1. Aktif Üyeler
+      const members = await apiService.getMembers()
+      const activeMembers = members.filter((m: any) => m.isActive).length
+      
+      // 2. Bugün Gelenler (today's attendance)
+      const today = new Date().toISOString().split('T')[0]
+      let todayAttendance = 0
+      try {
+        const todayAttendances = await apiService.getAttendancesByDate(today)
+        todayAttendance = todayAttendances.length
+      } catch (error) {
+        console.error('Error loading today attendances:', error)
+      }
+      
+      // 3. Bekleyen Ödemeler (same logic as PaymentTracker)
+      let pendingPayments = 0
+      try {
+        // Get all active members and their payment status (same as PaymentTracker)
+        const activeMembers = members.filter((m: any) => m.isActive)
+        const payments = await apiService.getPayments()
+        const packages = await apiService.getPackages()
+        
+        // Create a name->price mapping for packages
+        const nameToPrice = packages.reduce((acc: any, pkg: any) => {
+          acc[pkg.name] = pkg.price
+          return acc
+        }, {})
+
+        // Calculate payment status for each active member
+        const memberPayments = []
+        for (const member of activeMembers) {
+          let pkgName = member.membershipType || '-'
+          let pkgPrice = 0
+
+          // Get member's package info
+          try {
+            const memberPackages = await apiService.getMemberPackages(member.id) as any[]
+            if (memberPackages && memberPackages.length > 0) {
+              const activePackage = memberPackages.find((pkg: any) => pkg.isActive) || 
+                                   memberPackages.sort((a: any, b: any) => new Date(b.purchasedAt || 0).getTime() - new Date(a.purchasedAt || 0).getTime())[0]
+              
+              if (activePackage) {
+                pkgName = activePackage.packageName || member.membershipType || '-'
+                pkgPrice = nameToPrice[pkgName] || Number(activePackage.price) || 0
+              }
+            }
+          } catch (error) {
+            console.log(`Error fetching packages for member ${member.id}:`, error)
+          }
+
+          // Global package price check
+          if (nameToPrice[pkgName] !== undefined) {
+            pkgPrice = nameToPrice[pkgName]
+          }
+
+          // Get this member's payment info
+          const memberPayment = payments.find((p: any) => p.memberId === member.id)
+          
+          // Determine payment status
+          let status: 'paid' | 'pending' | 'overdue' = 'pending'
+          if (memberPayment) {
+            status = memberPayment.status as 'paid' | 'pending' | 'overdue'
+          }
+
+          memberPayments.push({ status })
+        }
+
+        // Count pending and overdue payments
+        pendingPayments = memberPayments.filter((mp: any) => 
+          mp.status === 'pending' || mp.status === 'overdue'
+        ).length
+      } catch (error) {
+        console.error('Error loading payments for pending count:', error)
+      }
+      
+      // 4. Bu Hafta Dersler (same logic as WeeklySchedule - updated)
+      let weeklyLessons = 0
+      try {
+        // Get the current week range (same as WeeklySchedule)
+        const selectedWeek = new Date().toISOString().split('T')[0]
+        const start = new Date(selectedWeek)
+        const end = new Date(start)
+        end.setDate(start.getDate() + 7)
+        const weekRange: string[] = []
+        for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
+          weekRange.push(new Date(d).toISOString().split('T')[0])
+        }
+
+        // Haftalık program için: hem atanmış dersler hem de yeni oluşturulan dersler
+        const members = await apiService.getMembers()
+        
+        // 1. Member-lesson assignments'tan gelen veriler
+        const assignmentSessions = await Promise.all(
+          members.map(async (m: any) => {
+            try {
+              const assigns = await apiService.getMemberLessonsByMember(m.id) as any[]
+              const detailed = await Promise.all(
+                (assigns || []).map(async (a: any) => {
+                  const l = await apiService.getLesson(a.lessonId)
+                  return {
+                    date: a.startDate,
+                    time: l?.startTime || '',
+                    member: `${m.firstName} ${m.lastName}`,
+                    type: l?.name || '-',
+                    source: 'assignment'
+                  }
+                })
+              )
+              return detailed.filter(s => s.date && weekRange.includes(s.date))
+            } catch {
+              return []
+            }
+          })
+        )
+        
+        // 2. Yeni oluşturulan lesson'lar (lessonDate field'ı olan)
+        const weekLessons = await Promise.all(
+          weekRange.map(async (date) => {
+            try {
+              const lessons = await apiService.getLessonsByDate(date) as any[]
+              const lessonSessions = await Promise.all(
+                lessons.map(async (lesson: any) => {
+                  // Bu lesson'a atanmış üyeleri bul (MemberLesson'dan)
+                  try {
+                    const memberLessons = await apiService.getMemberLessonsByLessonAndDate(lesson.id, date) as any[]
+                    return memberLessons.map((ml: any) => {
+                      const member = members.find((m: any) => m.id === ml.memberId)
+                      return {
+                        date,
+                        time: lesson.startTime || '',
+                        member: member ? `${member.firstName} ${member.lastName}` : 'Unknown',
+                        type: lesson.name || '-',
+                        source: 'lesson'
+                      }
+                    })
+                  } catch {
+                    return []
+                  }
+                })
+              )
+              return ([] as any[]).concat(...lessonSessions)
+            } catch {
+              return []
+            }
+          })
+        )
+        
+        // Tüm session'ları birleştir
+        const allSessions = [
+          ...([] as any[]).concat(...assignmentSessions),
+          ...([] as any[]).concat(...weekLessons)
+        ]
+        
+        // Duplicate'leri temizle (aynı member+date+time kombinasyonu)
+        const uniqueSessions = allSessions.filter((session, index, arr) => {
+          return index === arr.findIndex(s => 
+            s.member === session.member && 
+            s.date === session.date && 
+            s.time === session.time
+          )
+        })
+        
+        weeklyLessons = uniqueSessions.length
+      } catch (error) {
+        console.error('Error loading weekly lessons:', error)
+      }
+      
+      setDashboardStats({
+        activeMembers,
+        todayAttendance,
+        pendingPayments,
+        weeklyLessons,
+        loading: false
+      })
+      
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error)
+      setDashboardStats(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  // Load stats when component mounts or when switching to dashboard tab
+  useEffect(() => {
+    if (status === 'authenticated' && activeTab === 'dashboard') {
+      loadDashboardStats()
+    }
+  }, [status, activeTab])
+
+  // Redirect to login if not authenticated
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/auth/signin')
+    return null
+  }
 
   const handleNewMemberSubmit = async (memberData: CreateMemberDto) => {
     try {
@@ -75,11 +293,33 @@ export default function Dashboard() {
     }
   }
 
-  const handleAttendanceSubmit = (attendanceData: any) => {
-    console.log('Attendance data:', attendanceData)
-    // Burada API çağrısı yapılacak
-    alert('Yoklama başarıyla kaydedildi!')
-    setIsAttendanceModalOpen(false)
+  const handleAttendanceSubmit = async (attendanceData: any) => {
+    try {
+      console.log('Processing attendance data:', attendanceData)
+      
+      for (const attendance of attendanceData) {
+        const { memberId, status } = attendance
+        
+        if (status === 'present') {
+          // Üye geldi - check-in yap (ders sayısını düşür)
+          await apiService.checkIn({ memberId })
+          console.log(`Member ${memberId} checked in successfully`)
+        }
+        // 'absent' durumunda hiçbir şey yapmıyoruz
+      }
+      
+      push({ variant: 'success', title: 'Başarılı', message: 'Yoklama başarıyla kaydedildi!' })
+      setIsAttendanceModalOpen(false)
+      
+      // Dashboard stats'ları yenile
+      if (activeTab === 'dashboard') {
+        loadDashboardStats()
+      }
+      
+    } catch (error: any) {
+      console.error('Error processing attendance:', error)
+      push({ variant: 'error', title: 'Hata', message: `Yoklama kaydedilemedi: ${error?.message || 'Bilinmeyen hata'}` })
+    }
   }
 
   const handleAttendanceCancel = () => {
@@ -89,28 +329,28 @@ export default function Dashboard() {
   const stats = [
     {
       title: 'Aktif Üyeler',
-      value: '156',
+      value: dashboardStats.loading ? '...' : dashboardStats.activeMembers.toString(),
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
     {
       title: 'Bugün Gelenler',
-      value: '23',
+      value: dashboardStats.loading ? '...' : dashboardStats.todayAttendance.toString(),
       icon: CheckCircle,
       color: 'text-teal-600',
       bgColor: 'bg-teal-100'
     },
     {
       title: 'Bekleyen Ödemeler',
-      value: '8',
+      value: dashboardStats.loading ? '...' : dashboardStats.pendingPayments.toString(),
       icon: CreditCard,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100'
     },
     {
       title: 'Bu Hafta Dersler',
-      value: '45',
+      value: dashboardStats.loading ? '...' : dashboardStats.weeklyLessons.toString(),
       icon: Calendar,
       color: 'text-cyan-600',
       bgColor: 'bg-cyan-100'
@@ -230,15 +470,30 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gym Tracker</h1>
-              <p className="text-gray-600">Spor Salonu Yönetim Sistemi</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {session?.user?.businessName || 'Gym Tracker'}
+              </h1>
+              <p className="text-gray-600">
+                {session?.user?.businessType === 'gym' && 'Spor Salonu'}
+                {session?.user?.businessType === 'yoga_studio' && 'Yoga Stüdyosu'}
+                {session?.user?.businessType === 'pilates_studio' && 'Pilates Stüdyosu'}
+                {session?.user?.businessType === 'fitness_center' && 'Fitness Merkezi'}
+                {session?.user?.businessType === 'sports_club' && 'Spor Kulübü'}
+                {!session?.user?.businessType && 'Spor Salonu'} Yönetim Sistemi
+              </p>
             </div>
             <div className="flex items-center space-x-4">
-              
-                             <Button variant="outline" size="sm" onClick={testBackendConnection}>
-                 Test API
-               </Button>
-               
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>{session?.user?.name}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={testBackendConnection}>
+                Test API
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: '/auth/signin' })}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Çıkış
+              </Button>
             </div>
           </div>
         </div>

@@ -2,7 +2,8 @@ import mongoose, { Schema, models } from 'mongoose'
 
 const PackageSchema = new Schema(
   {
-    name: { type: String, required: true, unique: true },
+    userId: { type: Number, required: true, index: true },
+    name: { type: String, required: true },
     lessonCount: { type: Number, required: true },
     price: { type: Number, required: true }
   },

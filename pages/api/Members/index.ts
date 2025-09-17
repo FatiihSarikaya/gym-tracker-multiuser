@@ -2,14 +2,21 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import dbConnect from '@/lib/db'
 import Member from '@/models/Member'
 import { getNextId } from '@/lib/sequence'
+import { requireAuth } from '@/lib/session'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // Authentication check
+    const user = await requireAuth(req, res)
+    if (!user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+
     await dbConnect()
     console.log("Connected to DB")
 
     if (req.method === 'GET') {
-      const members = await Member.find({}).lean()
+      const members = await Member.find({ userId: user.id }).lean()
       console.log("Fetched members:", members.length)
       return res.status(200).json(members)
     }
@@ -23,6 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       const member = {
         id: await getNextId(Member),
+        userId: user.id,
         firstName: payload.firstName,
         lastName: payload.lastName,
         email: payload.email,
@@ -51,6 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           if (!existingPackage) {
             const packageData = {
               id: await getNextId(MemberPackage),
+              userId: user.id,
               memberId: member.id,
               membershipType: member.membershipType || '',
               packageName,

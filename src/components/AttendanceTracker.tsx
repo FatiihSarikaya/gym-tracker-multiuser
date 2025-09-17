@@ -96,9 +96,10 @@ export default function AttendanceTracker() {
   const loadAllMembers = async () => {
     try {
       const data = await apiService.getMembers()
-      // Zaten atanmış üyeleri filtrele
+      // Sadece aktif üyeleri filtrele, sonra zaten atanmış üyeleri çıkar
+      const activeMembersOnly = data.filter(member => member.isActive)
       const assignedMemberIds = attendanceRecords.map(record => record.memberId)
-      const availableMembers = data.filter(member => !assignedMemberIds.includes(member.id))
+      const availableMembers = activeMembersOnly.filter(member => !assignedMemberIds.includes(member.id))
       setAllMembers(availableMembers)
     } catch (error) {
       console.error('Error loading members:', error)

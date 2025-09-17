@@ -1,4 +1,4 @@
-'use client'
+ 'use client'
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -59,7 +59,10 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
           apiService.getMembers() as any,
           apiService.getLessons() as any
         ])
-        setMembers(ms.map((m: any) => ({ 
+        
+        // Sadece aktif üyeleri filtrele
+        const activeMembers = ms.filter((m: any) => m.isActive)
+        setMembers(activeMembers.map((m: any) => ({ 
           id: m.id, 
           name: `${m.firstName} ${m.lastName}`, 
           lessons: [],
@@ -75,7 +78,7 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
           }, {})
         ) as any[]
         setLessons(uniqueByName)
-        if (ms.length > 0) setSelectedMemberId(ms[0].id)
+        if (activeMembers.length > 0) setSelectedMemberId(activeMembers[0].id)
       } catch (e) {
         console.error('Load data failed:', e)
       }

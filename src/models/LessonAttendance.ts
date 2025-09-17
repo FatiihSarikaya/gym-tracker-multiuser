@@ -3,6 +3,7 @@ import mongoose, { Schema, models } from 'mongoose'
 const LessonAttendanceSchema = new Schema(
   {
     id: { type: Number, index: true, unique: true },
+    userId: { type: Number, required: true, index: true },
     memberId: { type: Number, required: true },
     lessonId: { type: Number, required: true },
     lessonDate: { type: String, required: true },

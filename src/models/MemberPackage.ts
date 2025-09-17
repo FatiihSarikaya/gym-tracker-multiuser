@@ -3,6 +3,7 @@ import mongoose, { Schema, models } from 'mongoose'
 const MemberPackageSchema = new Schema(
   {
     id: { type: Number, index: true, unique: true },
+    userId: { type: Number, required: true, index: true },
     memberId: { type: Number, required: true, index: true },
     membershipType: { type: String, default: '' },
     packageName: { type: String, required: true },

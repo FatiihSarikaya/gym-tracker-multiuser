@@ -3,6 +3,7 @@ import mongoose, { Schema, models } from 'mongoose'
 const LessonSchema = new Schema(
   {
     id: { type: Number, index: true, unique: true },
+    userId: { type: Number, required: true, index: true },
     name: { type: String, required: true },
     description: { type: String, default: '' },
     instructor: { type: String, required: true },

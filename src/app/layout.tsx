@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
+import { Providers } from '@/components/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,18 +19,20 @@ export default function RootLayout({
   return (
     <html lang="tr">      
       <body className={inter.className}>
-        <ToastProvider>
-        <div className="min-h-screen flex flex-col">
-          <div className="flex-1">
-            {children}
-          </div>
-          <footer className=" border-t bg-gray-50 text-gray-600">
-            <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-center gap-3 text-sm">
-              <span>© {new Date().getFullYear()} 3HTech. Tüm hakları saklıdır.</span>
+        <Providers>
+          <ToastProvider>
+            <div className="min-h-screen flex flex-col">
+              <div className="flex-1">
+                {children}
+              </div>
+              <footer className=" border-t bg-gray-50 text-gray-600">
+                <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-center gap-3 text-sm">
+                  <span>© {new Date().getFullYear()} 3HTech. Tüm hakları saklıdır.</span>
+                </div>
+              </footer>
             </div>
-          </footer>
-        </div>
-        </ToastProvider>
+          </ToastProvider>
+        </Providers>
       </body>
     </html>
   )

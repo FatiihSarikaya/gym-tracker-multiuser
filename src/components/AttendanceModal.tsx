@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, Clock, User, Phone, Package } from 'lucide-react'
+import { apiService, type Member } from '@/services/api'
 
-interface Member {
+interface AttendanceMember {
   id: number
   name: string
   phone: string
@@ -22,50 +23,38 @@ interface AttendanceModalProps {
 
 export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalProps) {
   const [attendance, setAttendance] = useState<{ [key: number]: 'present' | 'absent' }>({})
-  
-  // Bugünün üyeleri (örnek veri)
-  const todayMembers: Member[] = [
-    {
-      id: 1,
-      name: 'Ahmet Yılmaz',
-      phone: '0532 123 45 67',
-      package: 'Aylık Paket',
-      lessonTime: '09:00',
-      status: 'pending'
-    },
-    {
-      id: 2,
-      name: 'Fatma Demir',
-      phone: '0533 234 56 78',
-      package: 'Haftalık Paket',
-      lessonTime: '10:30',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      name: 'Mehmet Kaya',
-      phone: '0534 345 67 89',
-      package: 'Yıllık Paket',
-      lessonTime: '14:00',
-      status: 'pending'
-    },
-    {
-      id: 4,
-      name: 'Ayşe Özkan',
-      phone: '0535 456 78 90',
-      package: 'Aylık Paket',
-      lessonTime: '16:30',
-      status: 'pending'
-    },
-    {
-      id: 5,
-      name: 'Ali Veli',
-      phone: '0536 567 89 01',
-      package: 'Kişisel Antrenör',
-      lessonTime: '18:00',
-      status: 'pending'
+  const [todayMembers, setTodayMembers] = useState<AttendanceMember[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadActiveMembers()
+  }, [])
+
+  const loadActiveMembers = async () => {
+    try {
+      setLoading(true)
+      const members = await apiService.getMembers()
+      
+      // Sadece aktif üyeleri filtrele ve formatla
+      const activeMembers = members
+        .filter((member: Member) => member.isActive)
+        .map((member: Member) => ({
+          id: member.id,
+          name: `${member.firstName} ${member.lastName}`,
+          phone: member.phoneNumber || '-',
+          package: member.membershipType || '-',
+          lessonTime: '09:00', // Default time, gerçek veriler için lesson API'den alınabilir
+          status: 'pending' as const
+        }))
+      
+      setTodayMembers(activeMembers)
+    } catch (error) {
+      console.error('Aktif üyeler yüklenemedi:', error)
+      setTodayMembers([])
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const handleAttendanceChange = (memberId: number, status: 'present' | 'absent') => {
     setAttendance(prev => ({
@@ -123,9 +112,18 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
 
       {/* Members List */}
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold text-gray-900">Bugünün Üyeleri</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Aktif Üyeler</h3>
         
-        {todayMembers.map((member) => (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Üyeler yükleniyor...</div>
+          </div>
+        ) : todayMembers.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Aktif üye bulunamadı</div>
+          </div>
+        ) : (
+          todayMembers.map((member) => (
           <Card key={member.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -183,7 +181,8 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
               </div>
             </CardContent>
           </Card>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Actions */}

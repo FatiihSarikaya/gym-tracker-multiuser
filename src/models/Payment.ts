@@ -3,6 +3,7 @@ import mongoose, { Schema, models } from 'mongoose'
 const PaymentSchema = new Schema(
   {
     id: { type: Number, index: true, unique: true },
+    userId: { type: Number, required: true, index: true },
     memberId: { type: Number, required: true },
     amount: { type: Number, required: true },
     paymentType: { type: String, required: true },
