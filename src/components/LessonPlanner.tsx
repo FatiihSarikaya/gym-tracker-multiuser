@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import Modal from '@/components/ui/modal'
 import LessonPlanModal from '@/components/LessonPlanModal'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Clock, Users, Plus, BookOpen, CheckCircle } from 'lucide-react'
+import { Calendar, Clock, Users, Plus, BookOpen, CheckCircle, Target, CheckCircle2, CalendarDays } from 'lucide-react'
 import { apiService } from '@/services/api'
 
 export default function LessonPlanner() {
@@ -142,9 +142,9 @@ export default function LessonPlanner() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Ders Planlama</h2>
-          <p className="text-gray-600">8-12 ders planlaması ve takibi</p>
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/30">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">Ders Planlama</h2>
+          <p className="text-gray-700 font-medium">8-12 ders planlaması ve takibi</p>
         </div>
         <div className="flex items-center space-x-4">
           <Button onClick={() => setShowNewLessonModal(true)}>
@@ -181,41 +181,41 @@ export default function LessonPlanner() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
+        <Card className="group hover:shadow-blue-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Üye</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Toplam Üye</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">{stats.total}</p>
               </div>
-              <div className="p-3 rounded-full bg-gray-100">
-                <Users className="h-6 w-6 text-gray-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <Target className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-emerald-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Tamamlanan</p>
-                <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Tamamlanan</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">{stats.completed}</p>
               </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <CheckCircle2 className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-indigo-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Planlanan</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.scheduled}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Planlanan</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-blue-600 bg-clip-text text-transparent">{stats.scheduled}</p>
               </div>
-              <div className="p-3 rounded-full bg-blue-100">
-                <Calendar className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <CalendarDays className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>

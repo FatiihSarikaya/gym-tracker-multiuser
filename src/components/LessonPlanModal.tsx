@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Calendar, Clock, User, Trash2, Edit2, Plus } from 'lucide-react'
+import { Calendar, Clock, User, Trash2, Edit2, Plus, Users, UserPlus, CheckSquare, Square, AlertTriangle } from 'lucide-react'
 import { apiService } from '@/services/api'
 import { useToast } from './ui/toast'
 
@@ -233,7 +233,7 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Ders Seç</label>
           <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
             value={selectedLessonId ?? ''}
             onChange={e => setSelectedLessonId(Number(e.target.value))}
           >
@@ -245,7 +245,7 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Başlangıç Tarihi</label>
-          <input type="date" className="w-full px-3 py-2 border rounded" value={assignDate} onChange={e => setAssignDate(e.target.value)} />
+          <input type="date" className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium" value={assignDate} onChange={e => setAssignDate(e.target.value)} />
         </div>
       </div>
       {selectedLesson && (
@@ -316,33 +316,101 @@ export default function LessonPlanModal({ onClose }: LessonPlanModalProps) {
       )}
 
       {/* Üye ekle */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <User className="w-5 h-5 mr-2" />
-            Derse Üye Ekle
-          </h3>
-          <div className="space-y-2 max-h-48 overflow-auto">
+      <Card className="border border-blue-200/50 shadow-lg">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <div className="p-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg mr-3">
+                <UserPlus className="w-5 h-5 text-white drop-shadow-sm" />
+              </div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                Derse Üye Ekle
+              </h3>
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <Users className="w-4 h-4 mr-1" />
+              {selectedMemberIds.length} seçildi
+            </div>
+          </div>
+          
+          <div className="space-y-3 max-h-64 overflow-auto bg-gradient-to-br from-blue-50/30 to-purple-50/30 rounded-xl p-4 border border-blue-100/50">
             {members.map(m => {
               const isPackageFinished = (m.totalLessons || 0) === (m.attendedCount || 0) && (m.totalLessons || 0) > 0
+              const isSelected = selectedMemberIds.includes(m.id)
+              
               return (
-                <label key={m.id} className={`flex items-center gap-2 ${isPackageFinished ? 'opacity-50' : ''}`}>
-                  <input 
-                    type="checkbox" 
-                    checked={selectedMemberIds.includes(m.id)} 
-                    onChange={() => toggleMember(m.id)}
-                    disabled={isPackageFinished}
-                  />
-                  <span className={isPackageFinished ? 'text-red-600' : ''}>
-                    {m.name} {m.membershipType && `(${m.membershipType})`}
-                    {isPackageFinished && ' ⚠️ Ders hakkı bitti'}
-                  </span>
+                <label 
+                  key={m.id} 
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 cursor-pointer group ${
+                    isPackageFinished 
+                      ? 'opacity-50 bg-red-50/50 border border-red-200/50' 
+                      : isSelected
+                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-300/50 shadow-md transform scale-[1.02]'
+                        : 'bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-blue-50/50 hover:border-blue-300/50 hover:shadow-md hover:scale-[1.01]'
+                  }`}
+                >
+                  <div className="relative">
+                    <input 
+                      type="checkbox" 
+                      checked={isSelected} 
+                      onChange={() => toggleMember(m.id)}
+                      disabled={isPackageFinished}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
+                      isSelected 
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-500' 
+                        : 'border-gray-300 group-hover:border-blue-400'
+                    }`}>
+                      {isSelected && <CheckSquare className="w-3 h-3 text-white" />}
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className={`font-medium ${
+                        isPackageFinished 
+                          ? 'text-red-600' 
+                          : isSelected
+                            ? 'text-blue-700'
+                            : 'text-gray-700'
+                      }`}>
+                        {m.name}
+                      </span>
+                      {isPackageFinished && (
+                        <div className="flex items-center text-red-600">
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          <span className="text-xs font-medium">Ders Hakkı Bitti</span>
+                        </div>
+                      )}
+                    </div>
+                    {m.membershipType && (
+                      <span className="text-sm text-gray-500 bg-gray-100/80 px-2 py-1 rounded-lg mt-1 inline-block">
+                        {m.membershipType}
+                      </span>
+                    )}
+                  </div>
                 </label>
               )
             })}
           </div>
-          <div className="mt-3 flex justify-end">
-            <Button onClick={handleAssignMembers} disabled={!selectedLesson || !assignDate || selectedMemberIds.length===0}>Üyeleri Ata</Button>
+          
+          <div className="mt-6 flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              {selectedMemberIds.length > 0 && (
+                <span className="text-blue-600 font-medium">
+                  {selectedMemberIds.length} üye seçildi
+                </span>
+              )}
+            </div>
+            <Button 
+              onClick={handleAssignMembers} 
+              disabled={!selectedLesson || !assignDate || selectedMemberIds.length === 0}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Üyeleri Ata ({selectedMemberIds.length})
+            </Button>
           </div>
         </CardContent>
       </Card>

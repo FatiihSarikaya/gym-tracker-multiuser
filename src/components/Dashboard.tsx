@@ -17,7 +17,11 @@ import {
   Search,
   Filter,
   LogOut,
-  User
+  User,
+  Activity,
+  DollarSign,
+  BookOpen,
+  Target
 } from 'lucide-react'
 import AttendanceTracker from '@/components/AttendanceTracker'
 import PaymentTracker from '@/components/PaymentTracker'
@@ -324,30 +328,30 @@ export default function Dashboard() {
     {
       title: 'Aktif Üyeler',
       value: dashboardStats.loading ? '...' : dashboardStats.activeMembers.toString(),
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      icon: Target,
+      gradient: 'from-blue-500 to-blue-600',
+      bgGradient: 'from-blue-50 to-blue-100'
     },
     {
       title: 'Bugün Gelenler',
       value: dashboardStats.loading ? '...' : dashboardStats.todayAttendance.toString(),
-      icon: CheckCircle,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-100'
+      icon: Activity,
+      gradient: 'from-emerald-500 to-teal-600',
+      bgGradient: 'from-emerald-50 to-teal-100'
     },
     {
       title: 'Bekleyen Ödemeler',
       value: dashboardStats.loading ? '...' : dashboardStats.pendingPayments.toString(),
-      icon: CreditCard,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100'
+      icon: DollarSign,
+      gradient: 'from-purple-500 to-purple-600',
+      bgGradient: 'from-purple-50 to-purple-100'
     },
     {
       title: 'Bu Hafta Dersler',
       value: dashboardStats.loading ? '...' : dashboardStats.weeklyLessons.toString(),
-      icon: Calendar,
-      color: 'text-cyan-600',
-      bgColor: 'bg-cyan-100'
+      icon: BookOpen,
+      gradient: 'from-indigo-500 to-blue-600',
+      bgGradient: 'from-indigo-50 to-blue-100'
     }
   ]
 
@@ -378,15 +382,15 @@ export default function Dashboard() {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {stats.map((stat, index) => (
-                <Card key={index}>
+                <Card key={index} className="group hover:shadow-blue-500/25">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        <p className="text-sm font-semibold text-gray-600 mb-1">{stat.title}</p>
+                        <p className={`text-2xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>{stat.value}</p>
                       </div>
-                      <div className={`p-3 rounded-full ${stat.bgColor}`}>
-                        <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg group-hover:shadow-xl transition-all duration-300`}>
+                        <stat.icon className="h-6 w-6 text-white drop-shadow-sm" />
                       </div>
                     </div>
                   </CardContent>
@@ -432,58 +436,49 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-gray-600 hover:text-blue-600'
-                }`}
-              >
-                <tab.icon className="w-4 h-4 inline mr-2" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
-
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 backdrop-blur-2xl shadow-xl border-b border-blue-200/50">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
+            {/* Left - App Title */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {session?.user?.businessName || 'Gym Tracker'}
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent tracking-tight">
+                💪 Gym Tracker
               </h1>
-              <p className="text-gray-600">
-                {session?.user?.businessType === 'gym' && 'Spor Salonu'}
-                {session?.user?.businessType === 'yoga_studio' && 'Yoga Stüdyosu'}
-                {session?.user?.businessType === 'pilates_studio' && 'Pilates Stüdyosu'}
-                {session?.user?.businessType === 'fitness_center' && 'Fitness Merkezi'}
-                {session?.user?.businessType === 'sports_club' && 'Spor Kulübü'}
-                {!session?.user?.businessType && 'Spor Salonu'} Yönetim Sistemi
-              </p>
             </div>
+
+            {/* Center - Navigation Tabs */}
+            <div className="flex space-x-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-3 px-5 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-blue-400 hover:to-purple-500 bg-white/60 backdrop-blur-sm shadow-sm hover:shadow-md'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4 inline mr-2" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Right - User Info & Logout */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                <span>{session?.user?.name}</span>
+              <div className="flex items-center space-x-2 text-sm font-semibold bg-white/60 backdrop-blur-sm px-4 py-2 rounded-xl shadow-sm">
+                <User className="w-4 h-4 text-blue-600" />
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{session?.user?.name}</span>
               </div>
-              <Button variant="outline" size="sm" onClick={testBackendConnection}>
-                Test API
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: '/auth/signin' })}>
-                <LogOut className="w-4 h-4 mr-2" />
+              <button 
+                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+              >
+                <LogOut className="w-4 h-4 mr-2 inline" />
                 Çıkış
-              </Button>
+              </button>
             </div>
           </div>
         </div>

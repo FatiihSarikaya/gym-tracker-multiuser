@@ -4,7 +4,7 @@
  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
  import { Button } from '@/components/ui/button'
  import { Badge } from '@/components/ui/badge'
- import { Calendar, Clock, Users, Plus, CheckCircle } from 'lucide-react'
+ import { Calendar, Clock, Users, Plus, CheckCircle, Target, BookOpen, TrendingUp, CalendarDays, CalendarClock } from 'lucide-react'
  import { apiService } from '@/services/api'
 
  export default function WeeklySchedule() {
@@ -150,57 +150,57 @@
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Haftalık Program</h2>
-          <p className="text-gray-600">Üyelerin haftalık ders programları</p>
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/30">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">Haftalık Program</h2>
+          <p className="text-gray-700 font-medium">Üyelerin haftalık ders programları</p>
         </div>
         <div className="flex items-center space-x-4">
           <input
             type="date"
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
           />
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="group hover:shadow-blue-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Üye</p>
-                <p className="text-2xl font-bold text-gray-900">{totals.members}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Toplam Üye</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">{totals.members}</p>
               </div>
-              <div className="p-3 rounded-full bg-blue-100">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <Target className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-emerald-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Ders</p>
-                <p className="text-2xl font-bold text-green-600">{totals.sessions}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Toplam Ders</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">{totals.sessions}</p>
               </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <Calendar className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <BookOpen className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-purple-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Ortalama/Gün</p>
-                <p className="text-2xl font-bold text-purple-600">{averagePerDay}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Ortalama/Gün</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent">{averagePerDay}</p>
               </div>
-              <div className="p-3 rounded-full bg-purple-100">
-                <Clock className="h-6 w-6 text-purple-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <TrendingUp className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
@@ -253,8 +253,10 @@
                 if (sessions.length === 0) {
                   return (
                     <div className="text-center py-8 text-gray-500">
-                      <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                      <p>Bu gün için program yok</p>
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <CalendarClock className="w-6 h-6 text-gray-400" />
+                      </div>
+                      <p className="text-sm font-medium">Bu gün için program yok</p>
                     </div>
                   )
                 }

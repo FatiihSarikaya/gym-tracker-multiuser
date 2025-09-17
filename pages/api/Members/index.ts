@@ -13,9 +13,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     await dbConnect()
+    console.log("Connected to DB")
 
     if (req.method === 'GET') {
       const members = await Member.find({ userId: user.id }).lean()
+      console.log("Fetched members:", members.length)
       return res.status(200).json(members)
     }
 

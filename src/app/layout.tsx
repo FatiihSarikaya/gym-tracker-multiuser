@@ -21,11 +21,22 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <ToastProvider>
-            <div className="min-h-screen flex flex-col">
-              <div className="flex-1">
+            <div className="min-h-screen flex flex-col relative">
+              {/* App Background */}
+              <div className="fixed inset-0 z-0">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                  style={{
+                    backgroundImage: `url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80')`
+                  }}
+                ></div>
+                <div className="absolute inset-0 bg-white/60"></div>
+              </div>
+              
+              <div className="flex-1 relative z-10">
                 {children}
               </div>
-              <footer className=" border-t bg-gray-50 text-gray-600">
+              <footer className="border-t bg-white/90 backdrop-blur-sm text-gray-600 relative z-10">
                 <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-center gap-3 text-sm">
                   <span>© {new Date().getFullYear()} 3HTech. Tüm hakları saklıdır.</span>
                 </div>

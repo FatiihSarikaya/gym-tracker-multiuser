@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CreditCard, DollarSign, AlertCircle, CheckCircle, Clock, Plus, Edit3 } from 'lucide-react'
+import { CreditCard, DollarSign, AlertCircle, CheckCircle, Clock, Plus, Edit3, CheckCircle2, AlertTriangle, Timer } from 'lucide-react'
 import { apiService, type Payment, type Member } from '@/services/api'
 import { useToast } from '@/components/ui/toast'
 
@@ -195,7 +195,7 @@ export default function PaymentTracker() {
           size="sm"
           variant={status === 'pending' ? 'default' : 'outline'}
           onClick={() => handleStatusClick('pending')}
-          className={status === 'pending' ? 'bg-yellow-600 hover:bg-yellow-700' : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'}
+          className={status === 'pending' ? 'bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white shadow-lg shadow-amber-500/25' : 'text-amber-600 border-amber-500 hover:bg-amber-50 hover:border-amber-600'}
         >
           Ödemedi
         </Button>
@@ -203,7 +203,7 @@ export default function PaymentTracker() {
           size="sm"
           variant={status === 'overdue' ? 'default' : 'outline'}
           onClick={() => handleStatusClick('overdue')}
-          className={status === 'overdue' ? 'bg-red-600 hover:bg-red-700' : 'text-red-600 border-red-600 hover:bg-red-50'}
+          className={status === 'overdue' ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-600/30' : 'text-red-700 border-red-600 hover:bg-red-50 hover:border-red-700'}
         >
           Gecikti
         </Button>
@@ -214,13 +214,13 @@ export default function PaymentTracker() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'paid':
-        return <CheckCircle className="w-5 h-5 text-green-600" />
+        return <CheckCircle2 className="w-5 h-5 text-emerald-600" />
       case 'pending':
-        return <Clock className="w-5 h-5 text-yellow-600" />
+        return <Timer className="w-5 h-5 text-amber-600" />
       case 'overdue':
-        return <AlertCircle className="w-5 h-5 text-red-600" />
+        return <AlertTriangle className="w-5 h-5 text-red-700" />
       default:
-        return <Clock className="w-5 h-5 text-gray-400" />
+        return <Timer className="w-5 h-5 text-gray-400" />
     }
   }
 
@@ -244,69 +244,66 @@ export default function PaymentTracker() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Ödeme Takibi</h2>
-          <p className="text-gray-600">Üye ödemeleri ve finansal takip</p>
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/30">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">Ödeme Takibi</h2>
+          <p className="text-gray-700 font-medium">Üye ödemeleri ve finansal takip</p>
         </div>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Yeni Ödeme
-        </Button>
+        
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="group hover:shadow-blue-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Ödeme</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Toplam Ödeme</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-purple-600 bg-clip-text text-transparent">{stats.total}</p>
               </div>
-              <div className="p-3 rounded-full bg-gray-100">
-                <CreditCard className="h-6 w-6 text-gray-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <CreditCard className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-emerald-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Ödenen</p>
-                <p className="text-2xl font-bold text-green-600">{stats.paid}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Ödenen</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">{stats.paid}</p>
                 <p className="text-sm text-gray-500">₺{stats.paidAmount.toLocaleString()}</p>
               </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <CheckCircle2 className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-amber-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Bekleyen</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Bekleyen</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-amber-500 to-yellow-600 bg-clip-text text-transparent">{stats.pending}</p>
                 <p className="text-sm text-gray-500">₺{stats.pendingAmount.toLocaleString()}</p>
               </div>
-              <div className="p-3 rounded-full bg-yellow-100">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <Timer className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-red-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Gecikmiş</p>
-                <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Gecikmiş</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">{stats.overdue}</p>
                 <p className="text-sm text-gray-500">₺{stats.overdueAmount.toLocaleString()}</p>
               </div>
-              <div className="p-3 rounded-full bg-red-100">
-                <AlertCircle className="h-6 w-6 text-red-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <AlertTriangle className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>

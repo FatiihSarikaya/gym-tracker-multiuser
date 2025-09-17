@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Email transporter oluştur (Gmail kullanımı için)
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
@@ -71,7 +71,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             
             <div class="info-row">
                 <div class="label">📞 Telefon:</div>
-                <div class="value">${phone}</div>
+                <div class="value"><strong style="color: #667eea; font-size: 16px;">${phone}</strong></div>
+            </div>
+            
+            <div class="info-row">
+                <div class="label">📧 İletişim:</div>
+                <div class="value">☝️ Müşteriyle iletişim için yukarıdaki telefon numarasını kullanın</div>
             </div>
             
             <div class="info-row">
@@ -98,21 +103,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Email gönder
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER, // Mesajları alacak email
+      from: `"Gym Tracker İletişim" <${process.env.EMAIL_USER}>`,
+      to: process.env.CONTACT_EMAIL || 'canfatih445@gmail.com',
       subject: `🏋️ Gym Tracker - Yeni İletişim Talebi: ${name} ${surname}`,
+      // Reply-To header'ı ekliyoruz - böylece cevap verirken müşterinin numarasına gidecek
+      replyTo: `"${name} ${surname}" <noreply@gymtracker.com>`,
       html: emailContent,
       // Text versiyonu da ekleyelim
       text: `
 Gym Tracker - Yeni İletişim Talebi
 
-Ad Soyad: ${name} ${surname}
-Telefon: ${phone}
-Tarih: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}
+👤 Ad Soyad: ${name} ${surname}
+📞 Telefon: ${phone}
+📧 Müşteriyle iletişim için telefon kullanın: ${phone}
+📅 Tarih: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}
 
-${message ? `Mesaj: ${message}` : ''}
+${message ? `💬 Mesaj: ${message}` : ''}
 
-Bu mesaj Gym Tracker iletişim formundan gönderilmiştir.
+📝 Bu mesaj Gym Tracker iletişim formundan gönderilmiştir.
+🔔 Müşteriyle iletişim için yukarıdaki telefon numarasını kullanın.
       `
     })
 

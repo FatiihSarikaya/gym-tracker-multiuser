@@ -57,7 +57,7 @@ export default dbConnect
 // Connection health check for monitoring
 export async function checkDbHealth() {
   try {
-    if (mongoose.connection.readyState === 1) {
+    if (mongoose.connection.readyState === 1 && mongoose.connection.db) {
       await mongoose.connection.db.admin().ping()
       return { status: 'healthy', latency: Date.now() }
     }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, XCircle, Clock, User, Phone, Package } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, User, Phone, Package, UserCheck, UserX, TrendingUp } from 'lucide-react'
 import { apiService, type Member } from '@/services/api'
 
 interface AttendanceMember {
@@ -92,27 +92,27 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
-            <div className="text-sm text-gray-600">Toplam Üye</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">{totalCount}</div>
+            <div className="text-sm font-semibold text-gray-600">Toplam Üye</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{presentCount}</div>
-            <div className="text-sm text-gray-600">Gelenler</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">{presentCount}</div>
+            <div className="text-sm font-semibold text-gray-600">Gelenler</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{absentCount}</div>
-            <div className="text-sm text-gray-600">Gelmeyenler</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text text-transparent">{absentCount}</div>
+            <div className="text-sm font-semibold text-gray-600">Gelmeyenler</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Members List */}
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold text-gray-900">Aktif Üyeler</h3>
+        <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Aktif Üyeler</h3>
         
         {loading ? (
           <div className="text-center py-8">
@@ -129,7 +129,7 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 rounded-full bg-blue-100">
+                    <div className="p-2 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 shadow-sm">
                       <User className="w-4 h-4 text-blue-600" />
                     </div>
                     <div className="flex-1">
@@ -139,15 +139,15 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
                       </div>
                       <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
                         <span className="flex items-center">
-                          <Phone className="w-3 h-3 mr-1" />
+                          <Phone className="w-3 h-3 mr-1 text-blue-600" />
                           {member.phone}
                         </span>
                         <span className="flex items-center">
-                          <Package className="w-3 h-3 mr-1" />
+                          <Package className="w-3 h-3 mr-1 text-blue-600" />
                           {member.package}
                         </span>
                         <span className="flex items-center">
-                          <Clock className="w-3 h-3 mr-1" />
+                          <Clock className="w-3 h-3 mr-1 text-blue-600" />
                           {member.lessonTime}
                         </span>
                       </div>
@@ -161,10 +161,13 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
                     size="sm"
                     variant={attendance[member.id] === 'present' ? 'default' : 'outline'}
                     onClick={() => handleAttendanceChange(member.id, 'present')}
-                    className="flex items-center space-x-1"
+                    className={
+                      attendance[member.id] === 'present' 
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25' 
+                        : 'text-emerald-600 border-emerald-500 hover:bg-emerald-50 hover:border-emerald-600'
+                    }
                   >
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Geldi</span>
+                    Geldi
                   </Button>
                   
                   <Button
@@ -172,10 +175,13 @@ export default function AttendanceModal({ onSubmit, onCancel }: AttendanceModalP
                     size="sm"
                     variant={attendance[member.id] === 'absent' ? 'destructive' : 'outline'}
                     onClick={() => handleAttendanceChange(member.id, 'absent')}
-                    className="flex items-center space-x-1"
+                    className={
+                      attendance[member.id] === 'absent' 
+                        ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-600/30' 
+                        : 'text-red-700 border-red-600 hover:bg-red-50 hover:border-red-700'
+                    }
                   >
-                    <XCircle className="w-4 h-4" />
-                    <span>Gelmedi</span>
+                    Gelmedi
                   </Button>
                 </div>
               </div>

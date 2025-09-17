@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, XCircle, Clock, Search, Filter, Plus, Users, Calendar, BookOpen } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Search, Filter, Plus, Users, Calendar, BookOpen, UserCheck, UserX, Timer, CalendarCheck, Activity, TrendingUp } from 'lucide-react'
 import { apiService } from '@/services/api'
 import type { LessonAttendance } from '@/services/api'
 import Modal from '@/components/ui/modal'
@@ -400,13 +400,13 @@ export default function AttendanceTracker() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'present':
-        return <CheckCircle className="w-5 h-5 text-green-600" />
+        return <UserCheck className="w-5 h-5 text-emerald-600" />
       case 'absent':
-        return <XCircle className="w-5 h-5 text-red-600" />
+        return <UserX className="w-5 h-5 text-red-700" />
       case 'extra':
-        return <Clock className="w-5 h-5 text-blue-600" />
+        return <TrendingUp className="w-5 h-5 text-blue-600" />
       default:
-        return <Clock className="w-5 h-5 text-gray-400" />
+        return <Timer className="w-5 h-5 text-amber-600" />
     }
   }
 
@@ -457,16 +457,16 @@ export default function AttendanceTracker() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Yoklama Takibi</h2>
-          <p className="text-gray-600">Günlük yoklama ve üye takibi</p>
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/30">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">Yoklama Takibi</h2>
+          <p className="text-gray-700 font-medium">Günlük yoklama ve üye takibi</p>
         </div>
         <div className="flex items-center space-x-4">
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
           />
           <Button onClick={() => {
             setShowNewAttendanceModal(true)
@@ -490,8 +490,8 @@ export default function AttendanceTracker() {
                 <p className="text-sm font-medium text-gray-600">Toplam Üye</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
-              <div className="p-3 rounded-full bg-gray-100">
-                <Users className="h-6 w-6 text-gray-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg">
+                <Activity className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
@@ -503,8 +503,8 @@ export default function AttendanceTracker() {
                 <p className="text-sm font-medium text-gray-600">Gelenler</p>
                 <p className="text-2xl font-bold text-green-600">{stats.present}</p>
               </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg">
+                <UserCheck className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
@@ -516,8 +516,8 @@ export default function AttendanceTracker() {
                 <p className="text-sm font-medium text-gray-600">Gelmeyenler</p>
                 <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
               </div>
-              <div className="p-3 rounded-full bg-red-100">
-                <XCircle className="h-6 w-6 text-red-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 shadow-lg">
+                <UserX className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
@@ -529,8 +529,8 @@ export default function AttendanceTracker() {
                 <p className="text-sm font-medium text-gray-600">Ekstra</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.extra}</p>
               </div>
-              <div className="p-3 rounded-full bg-blue-100">
-                <Clock className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-600 shadow-lg">
+                <TrendingUp className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
@@ -668,7 +668,7 @@ export default function AttendanceTracker() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
             />
           </div>
 
@@ -778,6 +778,11 @@ export default function AttendanceTracker() {
                               variant={record.status === 'present' ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => handleAttendanceChange(record.memberId, 'present')}
+                              className={
+                                record.status === 'present' 
+                                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25' 
+                                  : 'text-emerald-600 border-emerald-500 hover:bg-emerald-50 hover:border-emerald-600'
+                              }
                             >
                               Geldi
                             </Button>
@@ -785,6 +790,11 @@ export default function AttendanceTracker() {
                               variant={record.status === 'absent' ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => handleAttendanceChange(record.memberId, 'absent')}
+                              className={
+                                record.status === 'absent' 
+                                  ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg shadow-red-600/30' 
+                                  : 'text-red-700 border-red-600 hover:bg-red-50 hover:border-red-700'
+                              }
                             >
                               Gelmedi
                             </Button>
@@ -792,6 +802,11 @@ export default function AttendanceTracker() {
                               variant={record.status === 'extra' ? 'default' : 'outline'}
                               size="sm"
                               onClick={() => handleAttendanceChange(record.memberId, 'extra')}
+                              className={
+                                record.status === 'extra' 
+                                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg shadow-blue-500/25' 
+                                  : 'text-blue-600 border-blue-500 hover:bg-blue-50 hover:border-blue-600'
+                              }
                             >
                               Ekstra
                             </Button>

@@ -24,11 +24,13 @@ export const config = {
     /*
      * Match all request paths except for the ones starting with:
      * - api/auth (authentication routes)
+     * - api/contact (public contact form)
+     * - api/test-email (public email testing)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!api/auth|api/contact|api/test-email|_next/static|_next/image|favicon.ico|public/).*)',
   ],
 }

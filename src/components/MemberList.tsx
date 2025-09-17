@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Users, UserCheck, UserX, Clock, Plus, Search, Filter, Phone, Mail, Loader2 } from 'lucide-react'
+import { Users, UserCheck, UserX, Clock, Plus, Search, Filter, Phone, Mail, Loader2, Target, CheckCircle2, UserMinus } from 'lucide-react'
 import { apiService, Member, CreateMemberDto, UpdateMemberDto } from '@/services/api'
 import { useToast } from '@/components/ui/toast'
 import NewMemberForm from './NewMemberForm'
@@ -191,9 +191,9 @@ export default function MemberList() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Üye Listesi</h2>
-          <p className="text-gray-600">Tüm üyelerin detaylı bilgileri</p>
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-white/30">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">Üye Listesi</h2>
+          <p className="text-gray-700 font-medium">Tüm üyelerin detaylı bilgileri</p>
         </div>
         <Button type="button" onClick={() => { console.log('Yeni Üye button clicked'); setShowNewForm(true) }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -202,42 +202,42 @@ export default function MemberList() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="group hover:shadow-blue-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Üye</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Toplam Üye</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">{stats.total}</p>
               </div>
-              <div className="p-3 rounded-full bg-gray-100">
-                <Users className="h-6 w-6 text-gray-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <Target className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-emerald-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Aktif Üyeler</p>
-                <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Aktif Üyeler</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">{stats.active}</p>
               </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <UserCheck className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <CheckCircle2 className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="group hover:shadow-red-500/25">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Pasif</p>
-                <p className="text-2xl font-bold text-red-600">{stats.inactive}</p>
+                <p className="text-sm font-semibold text-gray-600 mb-1">Pasif</p>
+                <p className="text-2xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">{stats.inactive}</p>
               </div>
-              <div className="p-3 rounded-full bg-red-100">
-                <UserX className="h-6 w-6 text-red-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-r from-red-600 to-red-700 shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <UserMinus className="h-6 w-6 text-white drop-shadow-sm" />
               </div>
             </div>
           </CardContent>
@@ -260,7 +260,7 @@ export default function MemberList() {
                   placeholder="Üye ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
                 />
               </div>
             </div>
@@ -438,11 +438,11 @@ export default function MemberList() {
                   <div className="flex flex-wrap items-end gap-3">
                     <div>
                       <label className="block text-xs text-gray-500">Başlangıç</label>
-                      <input type="date" className="border rounded px-2 py-1" value={filterStart} onChange={e => setFilterStart(e.target.value)} />
+                      <input type="date" className="border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium" value={filterStart} onChange={e => setFilterStart(e.target.value)} />
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500">Bitiş</label>
-                      <input type="date" className="border rounded px-2 py-1" value={filterEnd} onChange={e => setFilterEnd(e.target.value)} />
+                      <input type="date" className="border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium" value={filterEnd} onChange={e => setFilterEnd(e.target.value)} />
                     </div>
                     <Button type="button" variant="outline" onClick={() => { setFilterStart(''); setFilterEnd('') }}>Temizle</Button>
                     <Button type="button" onClick={() => exportCsv((selectedMember as any)._history?.attendances || [], 'attendances.csv')}>Yoklamaları İndir (CSV)</Button>
@@ -560,15 +560,15 @@ function InlineEditForm({ member, onCancel, onSave }: { member: Member; onCancel
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
           <label className="block text-sm text-gray-600">Ad</label>
-          <input className="border rounded px-3 py-2" placeholder="Ad" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+          <input className="border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium" placeholder="Ad" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
         </div>
         <div className="space-y-1">
           <label className="block text-sm text-gray-600">Soyad</label>
-          <input className="border rounded px-3 py-2" placeholder="Soyad" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+          <input className="border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium" placeholder="Soyad" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
         </div>
         <div className="space-y-1">
           <label className="block text-sm text-gray-600">E-posta</label>
-          <input className="border rounded px-3 py-2" placeholder="ornek@eposta.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input className="border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium" placeholder="ornek@eposta.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </div>
         <div className="space-y-1">
           <label className="block text-sm text-gray-600">Telefon</label>

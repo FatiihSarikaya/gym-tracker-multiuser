@@ -69,8 +69,8 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
       {/* Personal Information */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <User className="w-5 h-5 mr-2" />
+          <h3 className="text-lg font-bold mb-4 flex items-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <User className="w-5 h-5 mr-2 text-blue-600" />
             Kişisel Bilgiler
           </h3>
           
@@ -84,7 +84,7 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
                 required
               />
             </div>
@@ -98,7 +98,7 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
                 required
               />
             </div>
@@ -106,8 +106,8 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
           
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                <Phone className="w-4 h-4 mr-1" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                <Phone className="w-4 h-4 mr-1 text-blue-600" />
                 Telefon
               </label>
               <input
@@ -115,13 +115,13 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                <Mail className="w-4 h-4 mr-1" />
+              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                <Mail className="w-4 h-4 mr-1 text-blue-600" />
                 E-posta <span className="text-red-600 ml-1">*</span>
               </label>
               <input
@@ -129,14 +129,14 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
               />
             </div>
           </div>
           
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-              <Calendar className="w-4 h-4 mr-1" />
+            <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+              <Calendar className="w-4 h-4 mr-1 text-blue-600" />
               Doğum Tarihi
             </label>
             <input
@@ -153,14 +153,14 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
       {/* Membership Information */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <Package className="w-5 h-5 mr-2" />
+          <h3 className="text-lg font-bold mb-4 flex items-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <Package className="w-5 h-5 mr-2 text-blue-600" />
             Üyelik Bilgileri
           </h3>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Ders Paketi <span className="text-red-600">*</span>
               </label>
               <select
@@ -171,7 +171,7 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
                   const pkg = packages.find(p => p.name === name)
                   setFormData(prev => ({ ...prev, membershipType: name, totalLessons: pkg?.lessonCount || 0 }))
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-blue-200 bg-white/60 backdrop-blur-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
               >
                 <option value="">Seçiniz</option>
                 {packages.map(p => (
@@ -180,7 +180,7 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Toplam Ders Sayısı
               </label>
               <input
@@ -188,7 +188,7 @@ export default function NewMemberForm({ onSubmit, onCancel }: NewMemberFormProps
                 name="totalLessons"
                 value={formData.totalLessons}
                 readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+                className="w-full px-3 py-2 border border-blue-200 bg-gray-50/60 backdrop-blur-sm rounded-xl text-gray-600 font-medium shadow-sm"
                 placeholder="paket seçiniz"
                 min={0}
               />

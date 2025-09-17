@@ -22,11 +22,11 @@ export const CACHE_HEADERS = {
 
 // Standardized API response with compression hints
 export function apiResponse(res: NextApiResponse, data: any, type: 'static' | 'dynamic' | 'realtime' = 'dynamic') {
-  const headers = CACHE_HEADERS[type]
+  const headers = { ...CACHE_HEADERS[type] }
   
   // Add compression hint for large responses
   if (JSON.stringify(data).length > 1000) {
-    headers['Content-Encoding'] = 'gzip'
+    res.setHeader('Content-Encoding', 'gzip')
   }
 
   // Set performance headers
